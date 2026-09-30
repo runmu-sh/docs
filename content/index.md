@@ -1,6 +1,7 @@
 ---
 layout: home
 title: μClient documentation
+description: How to play, automate and extend μClient, the MU* client at runmu.sh.
 titleTemplate: false
 hero:
   name: μClient docs
