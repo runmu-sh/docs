@@ -69,7 +69,7 @@ export default defineExtension({
 });
 ```
 
-`npm create muclient-extension my-ext -- --ui vue` scaffolds this setup, with `vue` as a devDependency.
+`npm create @runmu.sh/extension my-ext -- --ui vue` scaffolds this setup, with `vue` as a devDependency.
 
 ## 3. Style it
 

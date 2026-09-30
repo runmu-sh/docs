@@ -9,7 +9,7 @@ While you work, the dev server rebuilds your extension on every save and μClien
 
 ## 1. Start the dev server
 
-In a project made with `npm create muclient-extension`:
+In a project made with `npm create @runmu.sh/extension`:
 
 ```sh
 npm run dev
@@ -25,9 +25,7 @@ The first line it prints is the address, `μClient dev server: http://localhost:
 
 Pass them after `--`: `npm run dev -- --port 5200`.
 
-::: tip
-The dev server package, `@muclient/dev`, is not on npm yet. `scripts/dev.mjs` finds it through `$MUCLIENT_DEV` (a path to `clients/extensions/dev/serve.mjs` in a μClient checkout), an installed `@muclient/dev`, or the checkout the project was created from.
-:::
+The dev server is the [`@runmu.sh/dev`](https://www.npmjs.com/package/@runmu.sh/dev) devDependency. To use it in a project that did not come from the scaffolder, `npm i -D @runmu.sh/dev esbuild` and run `npx runmu-dev .`. Set `$MUCLIENT_DEV` to a path to another `serve.mjs` to override it.
 
 ## 2. Load it in μClient
 

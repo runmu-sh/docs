@@ -1,28 +1,24 @@
 ---
 title: Build a panel in 10 minutes
-description: Scaffold an extension with npm create muclient-extension, run the dev server, and load your panel into a running μClient.
+description: Scaffold an extension with npm create @runmu.sh/extension, run the dev server, and load your panel into a running μClient.
 audience: extensions
 ---
 
 # Build a panel in 10 minutes
 
-You need Node ≥ 18 and a μClient account.
+You need Node ≥ 20 and a μClient account.
 
 ## 1. Scaffold
 
 ```sh
-npm create muclient-extension my-ext
+npm create @runmu.sh/extension my-ext
 ```
 
 It asks for an id, a package name, a display name, whether the panel example is Vue or plain DOM, and whether to add a Rust WebAssembly crate. For no prompts:
 
 ```sh
-npm create muclient-extension my-ext -- --ui vue -y
+npm create @runmu.sh/extension my-ext -- --ui vue -y
 ```
-
-::: tip
-`create-muclient-extension` and `@muclient/sdk` are not on npm yet. In a μClient checkout, run the scaffolder from the repository with the local SDK instead: `node clients/create-muclient-extension/index.mjs my-ext --sdk local -y`.
-:::
 
 | Option | |
 |---|---|
@@ -32,17 +28,25 @@ npm create muclient-extension my-ext -- --ui vue -y
 | `--display-name`, `--description` | Shown in μClient |
 | `--ui vue\|dom` | The panel example (default `dom`) |
 | `--wasm` / `--no-wasm` | Add the Rust crate (default no) |
-| `--sdk <spec>` | The `@muclient/sdk` devDependency: a range (default `^1.3.0`), `file:<path>`, or `local` |
+| `--sdk <spec>` | The `@muclient/sdk` devDependency (default `npm:@runmu.sh/sdk@^1.6.0`), or a `file:<path>` |
 | `--install` | Run `npm install` afterwards |
+| `--force` | Write into a folder that is not empty |
 | `-y`, `--yes` | No prompts |
+
+::: tip
+Prefer to start from a working example? [runmu-sh/extension_template](https://github.com/runmu-sh/extension_template) is the same project with a Hello world panel and three examples (a Vue panel, GMCP rooms, a line trigger). Choose **Use this template** on GitHub.
+:::
 
 ## 2. What you got
 
-- `package.json` with the `muclient` manifest: id, `api: "^1.3"`, `source`, and the contributions (a panel, a command, GMCP `Room 1`).
+- `package.json` with the `muclient` manifest: id, `api: "^1.6"`, `source`, and the contributions (a panel, a command, GMCP `Room 1`).
 - `src/index.ts`: `defineExtension` with `mu.settings.define`, `mu.gmcp.supports` + `mu.gmcp.on('Room.Info')`, `mu.commands.register`, and `mu.panels.register` with `snapshot()` / `restore()` for hot reload.
 - `src/panel.ts`: plain DOM with `mu.ui.css` classes, or a Vue component with render functions mounted with `mu.panels.vue`.
 - `scripts/build.mjs`: esbuild, ESM, es2022, externals `vue`, `@muclient/sdk`, `@muclient/ui`, then a manifest check.
-- `scripts/dev.mjs`: the dev server.
+- `scripts/dev.mjs`: starts the dev server.
+- `CHANGELOG.md`, and `.github/workflows/ci.yml`, which builds and typechecks on every push.
+
+Two devDependencies come from npm. `@muclient/sdk` is an alias of [`@runmu.sh/sdk`](https://www.npmjs.com/package/@runmu.sh/sdk): you import `@muclient/sdk`, the name the client's import map supplies at runtime, and the package gives the type checker its types. [`@runmu.sh/dev`](https://www.npmjs.com/package/@runmu.sh/dev) is the dev server.
 
 ## 3. Run it
 
@@ -51,6 +55,15 @@ cd my-ext && npm install && npm run dev
 ```
 
 In the client, open **☰ → Extensions**, go to **Advanced**, enter the dev server's URL under **Developer** and choose **load from dev server**. Your panel appears under **☰ → Views**. Edit `src/panel.ts` and save, and the panel reloads in place. [Hot reload](/extensions/hot-reload) has the details.
+
+## 4. Put it on GitHub
+
+```sh
+git init && git add -A && git commit -m "First version"
+gh repo create you/my-ext --public --source . --push
+```
+
+When it is ready, [publish it to the marketplace](/extensions/publish): link the repository and push a version tag, or upload the `npm pack` tarball. [runmu-sh/ext-scene](https://github.com/runmu-sh/ext-scene), the Scene panel, was made this way and is a larger example to read.
 
 ## Next
 

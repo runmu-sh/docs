@@ -17,7 +17,7 @@ export default defineExtension({
 });
 ```
 
-At runtime the bare import `@muclient/sdk` resolves through μClient's import map. Mark it external when you bundle. μClient tracks everything you register through `ctx.mu` and disposes it when the extension is disabled, uninstalled or reloaded.
+At runtime the bare import `@muclient/sdk` resolves through μClient's import map. Mark it external when you bundle. For the type checker, install the types from npm under that name: `npm i -D @muclient/sdk@npm:@runmu.sh/sdk@^1.6.0` (the scaffolder does this for you). μClient tracks everything you register through `ctx.mu` and disposes it when the extension is disabled, uninstalled or reloaded.
 
 A manifest's `api` must name major version 1, with or without a caret (`"^1.3"`, `"1.6"`). μClient refuses anything else with "this μClient provides 1.x".
 

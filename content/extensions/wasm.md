@@ -10,7 +10,7 @@ description: Add a Rust crate to an extension, build it to a pinned .wasm, and c
 ## 1. Scaffold with the crate
 
 ```sh
-npm create muclient-extension my-ext -- --wasm -y
+npm create @runmu.sh/extension my-ext -- --wasm -y
 ```
 
 Besides the usual files you get:

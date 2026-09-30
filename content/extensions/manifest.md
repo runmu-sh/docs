@@ -36,7 +36,7 @@ An extension is an npm package whose `package.json` has a `muclient` object. μC
 }
 ```
 
-`npm create muclient-extension` writes one like it (see [Build a panel in 10 minutes](/extensions/quickstart)).
+`npm create @runmu.sh/extension` writes one like it (see [Build a panel in 10 minutes](/extensions/quickstart)).
 
 ## Fields outside `muclient`
 
