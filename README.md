@@ -67,42 +67,47 @@ redeploying an earlier `sha-` tag). Pulling on the runmu.sh host is a person's s
 (github.com/orgs/runmu-sh/packages → mu-docs → Package settings → Change visibility) or pull with a
 token that has `read:packages`, like the other images.
 
-The container listens on plain `:80`, sets the CSP and cache headers itself, and only answers
-`/docs*` (anything else is 404). Next to `mu-landing` in the host's compose file:
+The container listens on plain `:80` on the compose network, sets the CSP and cache headers itself,
+and only answers `/docs*` (anything else is 404). It is one more service in the production compose,
+in the same shape as the others (Watchtower label, `mu_net`, log rotation; no host port, Caddy
+reaches it by name). `nginx:stable-alpine` has busybox `wget` for the healthcheck:
 
 ```yaml
-services:
-  landing:
-    image: ghcr.io/runmu-sh/mu-landing:latest
-    restart: unless-stopped
   docs:
+    # runmu.sh/docs. Built by github.com/runmu-sh/docs (deploy.yml pushes :latest on every merge to
+    # main); Watchtower picks it up like the others. Serves /docs* only, with its own CSP.
     image: ghcr.io/runmu-sh/mu-docs:latest
+    container_name: mu_docs
+    networks:
+      - mu_net
     restart: unless-stopped
-  caddy:
-    image: caddy:2
-    ports: ["80:80", "443:443"]
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-volumes:
-  caddy_data:
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/docs/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 ```
 
-Caddy routes `/docs*` to it and everything else to the landing container. It must pass the headers
-through and add no CSP of its own (two CSPs intersect):
+In the Caddyfile's `runmu.sh` site block, before the landing container's route (`handle` blocks are
+exclusive and Caddy sorts them most-specific first; if the landing route is a bare `reverse_proxy`,
+wrap it in `handle { … }` so the two do not both match). No `header Content-Security-Policy` here:
+the container sends its own and two CSPs intersect.
 
 ```caddyfile
-runmu.sh, www.runmu.sh {
     handle /docs* {
-        reverse_proxy docs:80
+        reverse_proxy mu_docs:80
     }
-    handle {
-        reverse_proxy landing:80
-    }
-}
 ```
 
-Then `docker compose pull docs && docker compose up -d docs`, and check:
+Then `docker compose up -d docs`, reload Caddy, and check:
 `curl -sI https://runmu.sh/docs/ | grep -i content-security-policy` shows this repo's policy (with
 `style-src 'self' https://fonts.googleapis.com` and no `'unsafe-inline'`), `/docs/automation/first-trigger`
 loads, and the browser console shows no CSP violation.
