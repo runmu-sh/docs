@@ -1,0 +1,12 @@
+# Paths the client and the marketplace deep-link to (runmu.sh/docs<path>). check.mjs fails when one has no page.
+# Move a page: leave a redirect page at the old path. Never delete a line without a client release that stops linking to it.
+/guide/
+/guide/first-world
+/automation/
+/automation/first-trigger
+/automation/ext-emit
+/extensions/
+/extensions/quickstart
+/extensions/publish
+/reference/lua/
+/reference/sdk/

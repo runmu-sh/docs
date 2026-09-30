@@ -1,0 +1,26 @@
+{
+  "name": "runmu-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "runmu.sh/docs: the μClient documentation for players, automation authors and extension developers. VitePress, wearing the runmu.sh shell from @muclient/brand.",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "@muclient/brand": "file:.local/muclient-brand-0.1.0.tgz",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.43"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.0",
+    "typescript": "5.9",
+    "vitest": "^2.1.9",
+    "vue-tsc": "^3.3.11"
+  }
+}

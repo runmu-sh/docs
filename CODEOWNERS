@@ -1,0 +1,5 @@
+# Reviews. content/reference/generated/ is written by the export workflow in runmu-sh/client (TypeDoc
+# for @muclient/sdk, the Lua function table, the OpenAPI documents, the protocol): edit those at the
+# source, not here, or the next export overwrites the change.
+*                              @runmu-sh/docs
+content/reference/generated/   @runmu-sh/client-bot

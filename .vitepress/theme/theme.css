@@ -1,0 +1,189 @@
+/* The docs theme over VitePress's default: every --vp-* colour is a brand token (no literal colour
+   here; scripts/check.mjs fails one), the brand's fonts, the section bar, and the layout fixes for a
+   header that is part of the page (the default theme expects its own fixed navbar). Dark only. */
+
+:root {
+  --vp-c-bg: var(--page);
+  --vp-c-bg-alt: var(--band);
+  --vp-c-bg-elv: var(--card);
+  --vp-c-bg-soft: var(--card);
+
+  --vp-c-border: var(--frame);
+  --vp-c-divider: var(--line);
+  --vp-c-gutter: var(--edge);
+
+  --vp-c-text-1: var(--text);
+  --vp-c-text-2: var(--muted);
+  --vp-c-text-3: var(--faint);
+
+  --vp-c-default-1: var(--soft);
+  --vp-c-default-2: var(--muted);
+  --vp-c-default-3: var(--frame);
+  --vp-c-default-soft: var(--band);
+
+  --vp-c-brand-1: var(--accent-text);
+  --vp-c-brand-2: var(--accent-strong);
+  --vp-c-brand-3: var(--accent);
+  --vp-c-brand-soft: var(--bg-exit);
+
+  --vp-c-tip-1: var(--accent-text);
+  --vp-c-tip-2: var(--accent-strong);
+  --vp-c-tip-3: var(--accent);
+  --vp-c-tip-soft: var(--bg-exit);
+
+  --vp-c-note-1: var(--soft);
+  --vp-c-note-2: var(--muted);
+  --vp-c-note-3: var(--frame);
+  --vp-c-note-soft: var(--band);
+
+  --vp-c-success-1: var(--ok);
+  --vp-c-success-2: var(--ok);
+  --vp-c-success-3: var(--ok);
+  --vp-c-success-soft: var(--ok-bg);
+
+  --vp-c-important-1: var(--accent-hover);
+  --vp-c-important-2: var(--accent-strong);
+  --vp-c-important-3: var(--accent);
+  --vp-c-important-soft: var(--bg-text);
+
+  --vp-c-warning-1: var(--warn);
+  --vp-c-warning-2: var(--warn);
+  --vp-c-warning-3: var(--warn);
+  --vp-c-warning-soft: var(--warn-bg);
+
+  --vp-c-danger-1: var(--red-text);
+  --vp-c-danger-2: var(--red-hover);
+  --vp-c-danger-3: var(--red);
+  --vp-c-danger-soft: var(--err-bg);
+
+  --vp-c-caution-1: var(--red-text);
+  --vp-c-caution-2: var(--red-hover);
+  --vp-c-caution-3: var(--red);
+  --vp-c-caution-soft: var(--err-bg);
+
+  --vp-c-white: var(--white);
+  --vp-c-black: var(--deep);
+  --vp-c-neutral: var(--text-strong);
+  --vp-c-neutral-inverse: var(--deep);
+
+  --vp-font-family-base: var(--sans);
+  --vp-font-family-mono: var(--mono);
+
+  --vp-code-block-bg: var(--deep);
+  --vp-code-color: var(--accent-hover);
+  --vp-code-bg: var(--band);
+  --vp-code-tab-divider: var(--line);
+  --vp-code-copy-code-bg: var(--card);
+  --vp-code-copy-code-hover-bg: var(--band);
+  --vp-code-copy-code-border-color: var(--edge);
+  --vp-code-copy-code-hover-border-color: var(--frame);
+  --vp-code-line-highlight-color: var(--bg-text);
+  --vp-code-line-number-color: var(--faint);
+  --vp-code-lang-color: var(--faint);
+
+  --vp-button-brand-bg: var(--accent);
+  --vp-button-brand-text: var(--on-accent);
+  --vp-button-brand-border: var(--accent);
+  --vp-button-brand-hover-bg: var(--accent-strong);
+  --vp-button-brand-hover-text: var(--on-accent);
+  --vp-button-brand-hover-border: var(--accent-strong);
+  --vp-button-brand-active-bg: var(--accent-strong);
+  --vp-button-brand-active-text: var(--on-accent);
+  --vp-button-brand-active-border: var(--accent-strong);
+  --vp-button-alt-bg: var(--card);
+  --vp-button-alt-text: var(--text-strong);
+  --vp-button-alt-border: var(--control);
+  --vp-button-alt-hover-bg: var(--band);
+  --vp-button-alt-hover-text: var(--white);
+  --vp-button-alt-hover-border: var(--faint);
+  --vp-button-alt-active-bg: var(--band);
+  --vp-button-alt-active-text: var(--white);
+  --vp-button-alt-active-border: var(--faint);
+
+  --vp-custom-block-font-size: 15px;
+  --vp-sidebar-bg-color: var(--page);
+  --vp-local-nav-bg-color: var(--page);
+  --vp-local-search-bg: var(--card);
+  --vp-local-search-result-bg: var(--band);
+  --vp-local-search-result-border: var(--edge);
+  --vp-local-search-result-selected-bg: var(--bg-text);
+  --vp-local-search-result-selected-border: var(--accent);
+  --vp-local-search-highlight-bg: var(--accent);
+  --vp-local-search-highlight-text: var(--on-accent);
+  --vp-backdrop-bg-color: var(--scrim);
+  --vp-shadow-1: 0 1px 2px var(--shade);
+  --vp-shadow-2: 0 3px 12px var(--shade);
+  --vp-shadow-3: 0 12px 32px var(--shade);
+  --vp-shadow-4: 0 14px 44px var(--shade);
+  --vp-shadow-5: 0 18px 56px var(--shade);
+
+  --vp-layout-max-width: 1440px;
+  --vp-sidebar-width: 264px;
+  /* The default theme's own navbar is off; the sections bar is the sticky thing at the top. */
+  --vp-nav-height: 0px;
+  --docs-sections-height: 52px;
+}
+
+/* config.ts's contentProps replaces the default inline `style="position:relative"` with this class. */
+.vp-content { position: relative; }
+
+/* The default theme's base.css sets these on body; the brand's shell.css expects the page to. */
+html { color-scheme: dark; }
+body { font-size: 17px; }
+
+/* ---- the section bar (Layout.vue), under the brand header, sticky ---- */
+.docs-sections { background: var(--band); border-bottom: 1px solid var(--line); }
+.docs-sections .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: var(--docs-sections-height); }
+.sections { display: flex; gap: 28px; height: 100%; font-size: 16px; }
+.sections a { display: inline-flex; align-items: center; color: var(--soft); text-decoration: none; }
+.sections a:hover { color: var(--white); }
+.sections a[aria-current] { color: var(--text-strong); box-shadow: inset 0 -2px 0 var(--accent); }
+.docs-search { flex: 0 1 320px; }
+.docs-search .DocSearch-Button { width: 100%; }
+
+/* ---- layout: the default theme's own navbar is off (--vp-nav-height: 0) and it takes the brand
+   header + section bar as its "layout top" (the variable it provides for a banner above the navbar):
+   the fixed sidebar, the sticky local nav and the outline all start below them. The header itself
+   is fixed so the section bar under it is too; the page starts after both. ---- */
+:root { --docs-header-height: 68px; --vp-layout-top-height: calc(var(--docs-header-height) + var(--docs-sections-height)); }
+header.nav { position: fixed; top: 0; left: 0; right: 0; z-index: calc(var(--vp-z-index-nav) + 1); height: var(--docs-header-height); }
+.docs-sections { position: fixed; top: var(--docs-header-height); left: 0; right: 0; z-index: var(--vp-z-index-nav); }
+.Layout { min-height: calc(100vh - var(--vp-layout-top-height)); }
+.VPContent:not(.has-sidebar) { margin-top: var(--vp-layout-top-height) !important; }
+.VPContent.has-sidebar { padding-top: var(--vp-layout-top-height); }
+.VPHero { margin-top: 0 !important; }
+@media (min-width: 960px) {
+  .VPSidebar { padding-top: 32px; }
+  .VPSidebar .curtain { display: none; }
+  .VPDoc .aside-container { top: var(--vp-layout-top-height); padding-top: 32px; }
+  .VPDoc .aside-curtain { display: none; }
+}
+@media (max-width: 720px) {
+  .docs-sections .wrap { gap: 12px; }
+  .sections { gap: 16px; font-size: 15px; }
+  .docs-search .DocSearch-Button-Keys, .docs-search .DocSearch-Button-Placeholder { display: none; }
+}
+
+/* Prose: the brand's type scale. */
+.vp-doc h1 { font-weight: 700; letter-spacing: -.01em; }
+.vp-doc h2 { border-top: 1px solid var(--line); }
+.vp-doc a { color: var(--accent-text); text-decoration: none; }
+.vp-doc a:hover { color: var(--accent-hover); text-decoration: underline; }
+.vp-doc div[class*='language-'] { border: 1px solid var(--line); }
+
+/* ---- the landing page (index.md, layout: home) ---- */
+.VPHome { padding-bottom: 64px; }
+.VPHero .name, .VPHero .text { font-weight: 700; }
+.VPHero .name { color: var(--text-strong); background: none; -webkit-text-fill-color: initial; }
+
+/* Cards (theme/components/Cards.vue) */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+.card { display: flex; flex-direction: column; gap: 8px; padding: 22px 24px; border: 1px solid var(--edge); border-radius: 10px; background: var(--card); color: inherit; text-decoration: none !important; transition: border-color .15s; }
+.card:hover { border-color: var(--frame); }
+.card h3 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text-strong); }
+.card p { margin: 0; font-size: 15px; color: var(--muted); line-height: 1.5; }
+.card .card-go { margin-top: auto; padding-top: 8px; font-size: 15px; font-weight: 600; color: var(--accent-text); }
+.card .card-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+
+/* Since badge (theme/components/Since.vue) */
+.since { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--edge); background: var(--band); font-size: 12px; font-weight: 600; color: var(--muted); }
