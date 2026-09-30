@@ -1,11 +1,12 @@
 ---
 title: Talking to extensions
+description: Send data from an alias or trigger to your TypeScript extensions with ext.emit, and the limits that apply.
 audience: automation
 ---
 
-# Talking to extensions: `ext.emit`
+# Talking to extensions
 
-`ext.emit(name, data)` sends `data` to the TypeScript extensions of every client attached to the session. It is the one way Lua talks to an extension, and it carries data only: the extension decides what to draw.
+`ext.emit(name, data)` sends `data` to the TypeScript extensions of every client attached to the session. It is the one way Lua talks to an extension. It carries data only, and the extension decides what to draw.
 
 ```lua
 -- a trigger on "^You enter (.+)\.$"
@@ -30,3 +31,9 @@ mu.lua.on('map.enter', (data, session) => { /* draw it */ });
 - **Rate limit**: 200 calls per second per session. Calls past that are dropped and the function returns `false`; it returns `true` when the message was sent.
 - **Transient**: messages are not logged, not kept in snapshots, not replayed. A client that attaches later does not see earlier ones. If an extension needs state, send it again or have the extension ask with a command.
 - **Private**: on the wire the event is encrypted with the world key, like GMCP.
+
+## Next
+
+- [GMCP and Lua events](/extensions/events): the extension side of `mu.lua.on`.
+- [GMCP and MSDP data](/automation/gmcp): the data most emits carry.
+- [Every Lua function](/reference/lua/).

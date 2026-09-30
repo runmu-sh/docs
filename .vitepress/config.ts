@@ -20,6 +20,7 @@ const guide: DefaultTheme.SidebarItem[] = [
     { text: 'Worlds and sessions', link: '/guide/worlds-and-sessions' },
     { text: 'Panels and layouts', link: '/guide/panels' },
     { text: 'Logs', link: '/guide/logs' },
+    { text: 'Search', link: '/guide/search' },
     { text: 'Themes', link: '/guide/themes' },
   ] },
   { text: 'Account', items: [

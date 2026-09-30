@@ -1,5 +1,6 @@
 ---
 title: Your first trigger
+description: Write a trigger that reacts to a line from the game, save it in the Script editor, and switch it off from another script.
 audience: automation
 ---
 
@@ -11,13 +12,13 @@ A trigger is a regular expression and a Lua script. When a line from the game ma
 
 Say the game prints this every time you arrive somewhere:
 
-```
+```text
 You enter the Market Square.
 ```
 
 ## 2. Write the pattern
 
-```
+```text
 ^You enter (.+)\.$
 ```
 
@@ -34,7 +35,7 @@ send("look")
 
 ## 4. Save it
 
-Open **Automation → Triggers** in the client, add a trigger, paste the pattern and the script, and give it a name (`arrive`). It is saved to your account and runs in the backend from now on, even with the client closed.
+Open **☰ → Views → Script editor** and press **＋ Trigger**. Give it the name `arrive`, set the pattern's type to **regex**, paste the pattern and the script, and press **Save**. It is saved to your account and runs in the backend from now on, even with the client closed.
 
 ## Turning it off from another script
 
@@ -43,7 +44,7 @@ Triggers can toggle each other, which is how you build modes:
 ```lua
 disableTrigger("arrive")   -- stop reacting for now
 enableTrigger("arrive")    -- and back on
-exists("arrive", "trigger") -- true
+exists("arrive", "trigger") -- true if it existed when the session started
 ```
 
 ## Reading game data
@@ -61,5 +62,5 @@ MSDP variables sit under `gmcp.msdp.<VAR>`.
 ## Next
 
 - [Aliases](/automation/aliases): the same thing for lines *you* type.
-- [Talking to extensions](/automation/ext-emit): when a trigger should show something rather than send something.
+- [Talking to extensions](/automation/ext-emit): when a trigger should show something in a panel.
 - [Every Lua function](/reference/lua/).
