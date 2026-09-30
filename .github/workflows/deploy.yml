@@ -1,6 +1,8 @@
-# Every push to main: build the mu-docs image (nginx + dist under /docs/ with the CSP in nginx.conf)
-# and push it to ghcr.io/runmu-sh/mu-docs as :latest and :<sha>. The runmu.sh host pulls :latest;
-# Caddy in front routes /docs/* to it (see README "Deploy").
+# Every merge to main (and by hand): build dist/, run the checks, and ship the mu-docs image to
+# ghcr.io/runmu-sh/mu-docs tagged `latest` and `sha-<commit>` (the same scheme as runmu-sh/client's
+# deploy-sites.yml, so a roll-back is the same: redeploy an earlier sha- tag). The runmu.sh host pulls
+# `latest`; Caddy in front routes /docs* to the container (README "Deploy"). Pulling is the owner's
+# step, as for mu-landing and mu-web.
 name: deploy
 on:
   push:
@@ -9,6 +11,8 @@ on:
 permissions:
   contents: read
   packages: write
+env:
+  REGISTRY: ghcr.io
 jobs:
   image:
     runs-on: ubuntu-latest
@@ -20,16 +24,25 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run check
-      - uses: docker/setup-buildx-action@v3
+      - name: Downcase REPO_OWNER
+        run: echo "REPO_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >>"$GITHUB_ENV"
+        env:
+          GITHUB_REPOSITORY_OWNER: '${{ github.repository_owner }}'
       - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/mu-docs
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
       - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/mu-docs:latest
-            ghcr.io/${{ github.repository_owner }}/mu-docs:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

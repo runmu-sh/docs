@@ -60,20 +60,52 @@ of that in place.
 
 ## Deploy
 
-`.github/workflows/deploy.yml` pushes `ghcr.io/runmu-sh/mu-docs:latest` on every merge to `main`.
-On the runmu.sh host, Caddy routes `/docs*` to the container and everything else to `mu-landing`;
-the container sets the CSP and cache headers itself, Caddy must pass them through and add none:
+`.github/workflows/deploy.yml` builds `dist/`, runs the checks and pushes
+`ghcr.io/runmu-sh/mu-docs` tagged `latest` and `sha-<commit>` on every merge to `main` (roll back by
+redeploying an earlier `sha-` tag). Pulling on the runmu.sh host is a person's step, as for
+`mu-landing` and `mu-web`. The package is private by default: either make it public
+(github.com/orgs/runmu-sh/packages → mu-docs → Package settings → Change visibility) or pull with a
+token that has `read:packages`, like the other images.
+
+The container listens on plain `:80`, sets the CSP and cache headers itself, and only answers
+`/docs*` (anything else is 404). Next to `mu-landing` in the host's compose file:
+
+```yaml
+services:
+  landing:
+    image: ghcr.io/runmu-sh/mu-landing:latest
+    restart: unless-stopped
+  docs:
+    image: ghcr.io/runmu-sh/mu-docs:latest
+    restart: unless-stopped
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+volumes:
+  caddy_data:
+```
+
+Caddy routes `/docs*` to it and everything else to the landing container. It must pass the headers
+through and add no CSP of its own (two CSPs intersect):
 
 ```caddyfile
-runmu.sh {
+runmu.sh, www.runmu.sh {
     handle /docs* {
-        reverse_proxy mu-docs:80
+        reverse_proxy docs:80
     }
     handle {
-        reverse_proxy mu-landing:80
+        reverse_proxy landing:80
     }
 }
 ```
+
+Then `docker compose pull docs && docker compose up -d docs`, and check:
+`curl -sI https://runmu.sh/docs/ | grep -i content-security-policy` shows this repo's policy (with
+`style-src 'self' https://fonts.googleapis.com` and no `'unsafe-inline'`), `/docs/automation/first-trigger`
+loads, and the browser console shows no CSP violation.
 
 ## Layout
 
