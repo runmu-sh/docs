@@ -62,7 +62,7 @@ export default defineExtension({
 
 `mu.wasm.load(path, imports?)` fetches `path` relative to the package root, instantiates it with `imports` (default none) and resolves to `{ module, instance, exports }`. Numbers pass straight through. For strings, the scaffold's `src/wasm.ts` calls `alloc`, writes UTF-8 into the module's memory, calls the export with a pointer and length, then `dealloc`s.
 
-The bundled example `@muclient/ext-wasm-add` does the same with a 41-byte module written by hand in WebAssembly text (`wasm/add.wat`), for when you do not want Rust.
+The example [runmu-sh/ext-wasm-add](https://github.com/runmu-sh/ext-wasm-add) (`wasm-add` on the marketplace) does the same with a 41-byte module written by hand in WebAssembly text (`wasm/add.wat`), for when you do not want Rust.
 
 ## Pinning
 

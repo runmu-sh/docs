@@ -63,7 +63,24 @@ git init && git add -A && git commit -m "First version"
 gh repo create you/my-ext --public --source . --push
 ```
 
-When it is ready, [publish it to the marketplace](/extensions/publish): link the repository and push a version tag, or upload the `npm pack` tarball. [runmu-sh/ext-scene](https://github.com/runmu-sh/ext-scene), the Scene panel, was made this way and is a larger example to read.
+When it is ready, [publish it to the marketplace](/extensions/publish): link the repository and push a version tag, or upload the `npm pack` tarball.
+
+## Examples to read
+
+Every first-party extension was made with this tool and is published the same way: a `vX.Y.Z` tag on its repository reaches the marketplace through the GitHub link. None is bundled with the client; players install them from **☰ → Extensions → Discover**.
+
+| Extension | Repository | Shows |
+|---|---|---|
+| Scene | [runmu-sh/ext-scene](https://github.com/runmu-sh/ext-scene) | A default-layout panel over `mu.scene.watch` |
+| Room Notes | [runmu-sh/ext-roomnotes](https://github.com/runmu-sh/ext-roomnotes) | Panel, command, GMCP `Room.Info`, a line stage, Lua `ext.emit`, per-world storage |
+| WASM Add | [runmu-sh/ext-wasm-add](https://github.com/runmu-sh/ext-wasm-add) | [`mu.wasm.load`](/extensions/wasm) with a pinned hash |
+| Vitals | [runmu-sh/ext-vitals](https://github.com/runmu-sh/ext-vitals) | GMCP `Char.Vitals` into status-bar gauges |
+| Web pages | [runmu-sh/ext-webpages](https://github.com/runmu-sh/ext-webpages) | GMCP `Client.Web.*` into `mu.panels.openWeb` |
+| Tickets | [runmu-sh/ext-tickets](https://github.com/runmu-sh/ext-tickets) | Two panels and a typed exported API (`ctx.api('tickets')`) |
+| Assist | [runmu-sh/ext-assist](https://github.com/runmu-sh/ext-assist) | A GMCP-driven staff queue |
+| Puppets | [runmu-sh/ext-puppets](https://github.com/runmu-sh/ext-puppets) | Per-puppet feeds with unread counts |
+
+Tickets, Assist and Puppets share [`@runmu.sh/ext-kit`](https://www.npmjs.com/package/@runmu.sh/ext-kit) ([runmu-sh/ext-kit](https://github.com/runmu-sh/ext-kit)): DOM helpers, the `.mx` panel CSS, a GMCP payload validator and a list model. Any extension can use it; esbuild bundles it in.
 
 ## Next
 
