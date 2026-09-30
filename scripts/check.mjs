@@ -5,7 +5,7 @@
 //  Source
 //  - no v-html / innerHTML / insertAdjacentHTML / document.write in the theme;
 //  - no `style=` attribute and no string `:style` binding in a theme template; no eval;
-//  - no literal colour (#…, rgb(, hsl(, color-mix() in any CSS or <style> outside @muclient/brand's
+//  - no literal colour (#…, rgb(, hsl(, color-mix() in any CSS or <style> outside @runmu.sh/brand's
 //    tokens.css (the theme maps --vp-* onto the brand tokens; content pages have no style at all);
 //  - every content page has frontmatter with a title, and `audience` if set is one of the four;
 //  - every path in stable-paths.txt has a page (the client and the marketplace deep-link to these).
@@ -58,7 +58,7 @@ for (const f of files(theme, (n) => n.endsWith('.css') || n.endsWith('.vue'))) {
     css = m[1];
   }
   const bare = strip(css).match(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|\bcolor-mix\(/g);
-  if (bare) errors.push(`${rel(f)} has colours outside @muclient/brand's tokens.css: ${[...new Set(bare)].join(', ')}`);
+  if (bare) errors.push(`${rel(f)} has colours outside @runmu.sh/brand's tokens.css: ${[...new Set(bare)].join(', ')}`);
 }
 
 // ---- Source: the content ------------------------------------------------------------------------

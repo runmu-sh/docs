@@ -7,7 +7,7 @@
 //  - metaChunk: true     emits the page-hash map as a hashed module instead of an inline script.
 // scripts/check.mjs fails the build if an inline <script> or <style> gets into dist/ anyway.
 import { defineConfig, type DefaultTheme } from 'vitepress';
-import fonts from '@muclient/brand/fonts.json' with { type: 'json' };
+import fonts from '@runmu.sh/brand/fonts.json' with { type: 'json' };
 import { writeLlmsIndex } from './llms';
 import { externalizeDataUrls, shikiClasses, stripInlineForCsp } from './csp';
 

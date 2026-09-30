@@ -1,11 +1,11 @@
 // The docs theme: VitePress's default theme (sidebar, outline, search, code groups, prev/next) with
-// the runmu.sh shell around it from @muclient/brand, a section bar in place of the default navbar,
+// the runmu.sh shell around it from @runmu.sh/brand, a section bar in place of the default navbar,
 // and every --vp-c-* remapped to the brand tokens (theme.css). No fonts from the theme: the brand's
 // come from Google Fonts through config.ts's head.
 import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme-without-fonts';
-import '@muclient/brand/styles/tokens.css';
-import '@muclient/brand/styles/shell.css';
+import '@runmu.sh/brand/styles/tokens.css';
+import '@runmu.sh/brand/styles/shell.css';
 import './theme.css';
 import Layout from './Layout.vue';
 import Cards from './components/Cards.vue';

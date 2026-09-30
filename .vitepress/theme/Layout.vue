@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // The runmu.sh shell around VitePress's layout. SiteShell (header, footer) comes from
-// @muclient/brand and is the same component runmu.sh's pages render, so the two cannot drift.
+// @runmu.sh/brand and is the same component runmu.sh's pages render, so the two cannot drift.
 // Between the header and the default layout sits the section bar (Guide / Automation / Extensions /
 // Reference, from themeConfig.nav) with the search box, in place of the default navbar, which
 // theme.css hides. On the front page (layout: home) the section bar has no current section.
-import { SiteShell } from '@muclient/brand';
+import { SiteShell } from '@runmu.sh/brand';
 import DefaultTheme from 'vitepress/theme-without-fonts';
 import { VPNavBarSearch } from 'vitepress/theme-without-fonts';
 import { useData, useRoute } from 'vitepress';

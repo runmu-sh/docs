@@ -5,7 +5,7 @@ Lua aliases, triggers and macros, **Extensions** for developers, and the **Refer
 `@muclient/sdk`, the games and marketplace APIs, the wire protocol).
 
 It is a [VitePress](https://vitepress.dev) site wearing the runmu.sh shell from
-[`@muclient/brand`](https://www.npmjs.com/package/@muclient/brand), served by nginx under the same
+[`@runmu.sh/brand`](https://www.npmjs.com/package/@runmu.sh/brand), served by nginx under the same
 strict Content-Security-Policy as the rest of runmu.sh. Content is Markdown under `content/`; changes
 arrive as pull requests ("Suggest an edit" on every page opens one). Documentation is CC BY 4.0, the
 code MIT ([LICENSE](LICENSE)).
