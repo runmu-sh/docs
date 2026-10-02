@@ -34,6 +34,15 @@ A new world has **Add & connect**, which saves it and opens a session. Editing s
 **Play in μClient** on a game's page at [runmu.sh/games/](https://runmu.sh/games/) asks **Add …?** and saves the world without connecting. If you already have that host and port, it asks **Open …?** instead.
 :::
 
+## Log in and edit with the game
+
+Some games offer more than text. These settings are per world, on its connection settings.
+
+- **Settings → Connection → Login → Log in with GMCP**: when the game asks for a login over GMCP (`Char.Login.Default`), μClient answers with the **Character** and **Password** you enter here. They are sealed with the world key and never shown to extensions.
+- **Settings → Connection → Accept LambdaCore local editing (#$# edit)**: on a MOO that uses LambdaCore's local editing, open the code or text it sends in μClient's editor, and save it back with the game's upload command. Off by default, and turned off by itself once the game speaks MCP 2.1, which edits the same way.
+- **Settings → Input → Open editors in**: where a game editor opens. Modal by default. Window and panel open as a modal for now.
+- **Settings → Input → Editor upload verbs**: the commands an editor may save with without asking, such as `@program`. A save that runs another command asks you first, once per world.
+
 ## Open more sessions
 
 Two sessions let two characters play the same game side by side. Start one with:

@@ -55,6 +55,11 @@ Triggers and aliases live on the server and run there, so they are the same ever
 - screen effects, **Reduce motion**, **Screen reader mode**, **Speak new output**
 - volume, mute, keyboard sounds, room music
 - **Desktop notifications** and **Open web pages**
+- **Alert on every device**
+
+## Sounds and alerts on several devices
+
+With one session open on several devices or tabs, sounds, toasts and notifications that the game causes play on one of them: the one you are looking at. When you look at none, each device's first tab plays them. To hear a device even while you play on another, turn on **Settings → Alerts → Alert on every device** on that device. It is off by default.
 
 ## Back up your settings
 

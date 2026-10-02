@@ -97,4 +97,4 @@ A token can publish, yank and edit your listings. It cannot delete listings or v
 
 - [The manifest](/extensions/manifest): every field of `muclient`.
 - [Marketplace API](/reference/marketplace-api/): the endpoints behind these pages.
-- [Hot reload](/extensions/hot-reload): test before you tag.
+- [Hot reload and tests](/extensions/hot-reload): test before you tag.

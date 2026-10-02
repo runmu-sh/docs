@@ -13,6 +13,8 @@ Open **☰** (top left) and go to **Views**. The submenu lists every panel, with
 
 On the keyboard, → or Enter opens **Views**, ↑ and ↓ move, ← or Esc goes back. The command palette (Ctrl+K) has an entry for every panel, such as **Open logs**.
 
+**Views** also lists the **GMCP** inspector (**Open GMCP inspector** in the palette). It shows every GMCP and MCP message the game and your extensions exchange, for debugging. It records only while it is open.
+
 Some panels open themselves the first time their data arrives, such as Channels when the game sends its first channel message over GMCP. If you close one, it stays closed in that world on this device.
 
 ## Dock panels
