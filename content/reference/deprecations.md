@@ -7,9 +7,21 @@ description: Deprecated parts of the @muclient/sdk extension API, and deprecated
 
 ## SDK
 
-No member of `@muclient/sdk` is deprecated. Versions 1.0 to 1.6 each add members and remove none. The [changelog](/reference/changelog) lists what each version added.
+The SDK keeps 1.x backwards compatible. A deprecated call keeps working in 1.x, warns in the extension's log, and stops working in 2.0.
 
-μClient accepts extensions that declare API major version 1 (`"api": "^1.3"` in the manifest). It refuses other major versions with "this μClient provides 1.x".
+| Deprecated | Since | Instead |
+|---|---|---|
+| `mu.commands.run(id)` with a core command id outside `PUBLIC_COMMANDS`, such as `panel.open.<id>` | 1.12 | A public command, or the SDK call (`mu.panels.open`). See [Run a command](/extensions/commands-settings#run-a-command). The log says `commands.run('<id>'): not a public command.` once per id |
+
+Some versions changed behaviour without removing anything. The [changelog](/reference/changelog) marks each one.
+
+μClient accepts extensions whose `api` range is major version 1 and no newer than its own SDK. It refuses a newer range with "It needs μClient extension API …; this μClient has … Update μClient."
+
+## Protocol
+
+| Deprecated | Since | Instead |
+|---|---|---|
+| `session.sendGmcp` with plaintext `package` and `data` | 1.10 | The sealed form: `nonce` and `ciphertext` of `{ package, data }`. See [the protocol](/reference/protocol/#sessions) |
 
 ## Marketplace listings
 

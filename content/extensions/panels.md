@@ -1,6 +1,6 @@
 ---
 title: Panels
-description: Register a dock panel in plain DOM or Vue, style it with the client's classes, choose where it opens, and list it in the Views menu.
+description: Register a dock panel in plain DOM or Vue, style it with the client's classes, choose where it opens, offer it only where it has data, badge it, and list it in the Views menu.
 ---
 
 # Panels
@@ -84,12 +84,15 @@ Use the class names in `mu.ui.css` for your controls, and the panel follows the 
 | `empty` | Dim placeholder text |
 | `framed`, `badge`, `lamp`, `glow` | A frame, a badge, a status lamp, glowing text |
 | `cmd`, `toggle`, `plate`, `count`, `field`, `row`, `label` <Since v="1.5" /> | The terminal primitives: command, toggle, status plate, counter, field, list row, label |
+| `secClose`, `hlLine`, `onoff`, `placeholder`, `sq`, `warn`, `on`, `off`, `hot`, `dim`, `gold`, `ok` <Since v="1.12" /> | More of μClient's own classes (`sec-close`, `hl-line`, `onoff`, …), so code without Vue can match its panels |
 
-For layout of your own, `mu.ui.style(css)` <Since v="1.1" /> adds a stylesheet and removes it when the extension is disposed. It applies to the whole page, so put every rule under a class of your own root element, and take colours from the theme's variables (`var(--fg)`, `var(--fg-dim)`, `var(--bg-elev)`, `var(--accent-bright)`, `var(--border-bright)`). `mu.theme.cssVar('accent')` reads a variable's current value. Call `mu.ui.style` in `activate`, as with the other short snippets on this page:
+For layout of your own, `mu.ui.style(css)` <Since v="1.1" /> adds a stylesheet and removes it when the extension is disposed. Since 1.12 the sheet sits in the CSS layer `@layer ext.<id>`, below μClient's own `mu` layer, and it reaches popped-out panels too. An unscoped rule no longer beats μClient's rules for the same element, so scope your selectors to your panels, `.ext-panel[data-ext="<id>"]`, or to a root class of your own. Take colours from the theme's variables (`var(--fg)`, `var(--fg-dim)`, `var(--bg-elev)`, `var(--accent-bright)`, `var(--border-bright)`). `mu.theme.cssVar('accent')` reads a variable's current value. Call `mu.ui.style` in `activate`, as with the other short snippets on this page:
 
 ```ts
-mu.ui.style(`.here-panel { padding: 8px 10px; color: var(--fg); background: var(--bg-elev); }`);
+mu.ui.style(`.ext-panel[data-ext="here"] .here-panel { padding: 8px 10px; color: var(--fg); background: var(--bg-elev); }`);
 ```
+
+A dev extension gets a warning in its log for each rule that matches μClient's own elements outside your panels. For dialogs, menus and the ON/OFF plate, use the [shared components and dialogs](/extensions/surfaces) rather than your own.
 
 ## Where it opens
 
@@ -131,17 +134,17 @@ export default defineExtension({
 });
 ```
 
-`mu.panels.close(id)` closes every open tab of that panel.
+`mu.panels.close(id)` closes every open tab of that panel. `mu.panels.open(id, params, { title?, sid?, focus? })` <Since v="1.7" /> sets the tab title, picks the session's workspace, and with `focus: false` opens the tab without bringing it to the front.
 
 ## One per session
 
-Each session has its own dock, so a panel open in two sessions is mounted twice, each with its own `ctx.sid`. Keep per-session data in a `Map` keyed by `sid` and read the entry for the `sid` you were mounted with. Scaffolded projects do this with the rooms they get from `Room.Info`.
+Each session has its own dock, so a panel open in two sessions is mounted twice, each with its own `ctx.sid`. Keep per-session data in `mu.sessions.each`, whose cleanup runs when the session closes, or in `mu.storage.session(sid)`, and read the entry for the `sid` you were mounted with. See [Sessions](/extensions/events#sessions).
 
-`PanelSpec` also takes `perSession`. μClient does not act on it yet: every panel opens inside a session's dock and gets that session's `sid`.
+With `perSession: false` <Since v="1.8" />, the panel follows the active session instead: one instance, whose `ctx.sid` is the session in front.
 
 ## The Views menu
 
-Every registered panel is listed under **☰ → Views**, sorted by `order` (lower first, default 200) <Since v="1.4" />. The client's own panels are Terminal 0, Scene 10, Channels 20, Media 30, Feeds 50, Web page 210, Script editor 300, Logs 310 and Session 320. The command palette (Ctrl+K) also lists **Open** and the panel's title in lower case for each panel, so the `here` panel gets **Open here**.
+Every registered panel is listed under **☰ → Views**, sorted by `order` (lower first, default 200) <Since v="1.4" />. The client's own panels are Terminal 0, Scene 10, Channels 20, Media 30, Feeds 50, Web page 210, Script editor 300, Logs 310, Session 320 and GMCP 330. The command palette (Ctrl+K) also lists **Open** and the panel's title in lower case for each panel, so the `here` panel gets **Open here**.
 
 `inViewsMenu: false` <Since v="1.1" /> leaves a panel out of Views. Its palette entry stays. Change the title or the listing later with `mu.panels.update` <Since v="1.1" />, which also retitles the open tabs.
 
@@ -156,6 +159,36 @@ To open a panel for the player the first time your data arrives, call `mu.panels
 mu.gmcp.on('Room', (_data, { sid }) => mu.panels.autoAdd('scene', sid));
 ```
 
+Panels you declare in `contributes.panels` are listed before the extension starts. A saved layout keeps their tab with **Loading `<title>`…** until `register` replaces it. See [The manifest](/extensions/manifest#contributes).
+
+## Offer it only where it has data <Since v="1.12" />
+
+A panel for one game's package is clutter in every other world. `show` decides when the panel is offered:
+
+```ts
+mu.panels.register({ id: 'tickets', title: 'Tickets', show: 'auto', role: 'staff', mount });
+mu.gmcp.on('Client.Tickets.List', (d, meta) => {
+  mu.panels.touch('tickets', meta.sid);
+  render(d);
+});
+```
+
+| `show` | |
+|---|---|
+| `'always'` | The default. Listed in Views everywhere |
+| `'auto'` | Kept out of Views until `mu.panels.touch(id, sid)` reports data for the session. Then it is listed, and added to the workspace once |
+| `'never'` | Not offered until the player changes it |
+
+μClient adds a **Show panel** row (auto, on, off) per world to your extension's Settings page, stored as `ext.<id>.<panel id>.enabled`. `role: 'staff'` lists the panel only for a character with that role (`SessionRef.roles`, which [`provideIdentity`](/extensions/events#sessions) sets).
+
+## Badges <Since v="1.12" />
+
+`mu.panels.badge(id, { count?, mention? }, sid?)` puts a count or a mention mark on the panel's tab. It adds to the session tab's and the world's unread count, and every client shows it. `null` clears it.
+
+```ts
+mu.panels.badge('tickets', { count: open.length, mention: open.some((t) => t.mine) }, sid);
+```
+
 ## When a panel fails
 
 When `mount` throws, the tab shows **`<title>` crashed · `<message>`** with a **Reload** button, and the rest of the dock keeps working. The error goes to the extension's **log** in **Extensions → Installed** and counts toward the three errors in a minute that disable the extension. Disabling or uninstalling the extension closes its panels.
@@ -167,5 +200,6 @@ A hot reload remounts your panel in the same tab. Give it `snapshot` and `restor
 ## Next
 
 - [Commands and settings](/extensions/commands-settings): open your panel from the palette and give it options.
-- [GMCP and Lua events](/extensions/events): the data a panel usually shows.
+- [Events, sessions and GMCP](/extensions/events): the data a panel usually shows.
+- [Surfaces](/extensions/surfaces): dialogs, menus and the shared components.
 - [SDK reference](/reference/sdk/): `mu.panels`, `mu.ui` and `PanelSpec` in full.

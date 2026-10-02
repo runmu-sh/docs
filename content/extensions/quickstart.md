@@ -28,7 +28,7 @@ npm create @runmu.sh/extension my-ext -- --ui vue -y
 | `--display-name`, `--description` | Shown in μClient |
 | `--ui vue\|dom` | The panel example (default `dom`) |
 | `--wasm` / `--no-wasm` | Add the Rust crate (default no) |
-| `--sdk <spec>` | The `@muclient/sdk` devDependency (default `npm:@runmu.sh/sdk@^1.6.0`), or a `file:<path>` |
+| `--sdk <spec>` | The `@muclient/sdk` devDependency (default `npm:@runmu.sh/sdk@^1.12.0`), a `file:<path>`, or `local` for the SDK of the μClient checkout the tool runs from |
 | `--install` | Run `npm install` afterwards |
 | `--force` | Write into a folder that is not empty |
 | `-y`, `--yes` | No prompts |
@@ -39,14 +39,15 @@ Prefer to start from a working example? [runmu-sh/extension_template](https://gi
 
 ## 2. What you got
 
-- `package.json` with the `muclient` manifest: id, `api: "^1.6"`, `source`, and the contributions (a panel, a command, GMCP `Room 1`).
+- `package.json` with the `muclient` manifest: id, `api: "^1.12"`, `source`, and the contributions (a panel, a command, GMCP `Room 1`).
 - `src/index.ts`: `defineExtension` with `mu.settings.define`, `mu.gmcp.supports` + `mu.gmcp.on('Room.Info')`, `mu.commands.register`, and `mu.panels.register` with `snapshot()` / `restore()` for hot reload.
 - `src/panel.ts`: plain DOM with `mu.ui.css` classes, or a Vue component with render functions mounted with `mu.panels.vue`.
 - `scripts/build.mjs`: esbuild, ESM, es2022, externals `vue`, `@muclient/sdk`, `@muclient/ui`, then a manifest check.
 - `scripts/dev.mjs`: starts the dev server.
-- `CHANGELOG.md`, and `.github/workflows/ci.yml`, which builds and typechecks on every push.
+- `test/index.test.mjs` and `test/fixtures/session.murec`: `npm test` runs the extension in a headless host and replays a recorded session. See [Test headless](/extensions/hot-reload#test-headless).
+- `CHANGELOG.md`, and `.github/workflows/ci.yml`, which builds, typechecks and tests on every push.
 
-Two devDependencies come from npm. `@muclient/sdk` is an alias of [`@runmu.sh/sdk`](https://www.npmjs.com/package/@runmu.sh/sdk): you import `@muclient/sdk`, the name the client's import map supplies at runtime, and the package gives the type checker its types. [`@runmu.sh/dev`](https://www.npmjs.com/package/@runmu.sh/dev) is the dev server.
+Two devDependencies come from npm. `@muclient/sdk` is an alias of [`@runmu.sh/sdk`](https://www.npmjs.com/package/@runmu.sh/sdk): you import `@muclient/sdk`, the name the client's import map supplies at runtime, and the package gives the type checker its types. [`@runmu.sh/dev`](https://www.npmjs.com/package/@runmu.sh/dev) 0.2 is the dev server and the headless test host.
 
 ## 3. Run it
 
@@ -54,7 +55,7 @@ Two devDependencies come from npm. `@muclient/sdk` is an alias of [`@runmu.sh/sd
 cd my-ext && npm install && npm run dev
 ```
 
-In the client, open **☰ → Extensions**, go to **Advanced**, enter the dev server's URL under **Developer** and choose **load from dev server**. Your panel appears under **☰ → Views**. Edit `src/panel.ts` and save, and the panel reloads in place. [Hot reload](/extensions/hot-reload) has the details.
+In the client, open **☰ → Extensions**, go to **Advanced**, enter the dev server's URL under **Developer** and choose **load from dev server**. Your panel appears under **☰ → Views**. Edit `src/panel.ts` and save, and the panel reloads in place. [Hot reload and tests](/extensions/hot-reload) has the details.
 
 ## 4. Put it on GitHub
 
@@ -86,5 +87,5 @@ Tickets, Assist and Puppets share [`@runmu.sh/ext-kit`](https://www.npmjs.com/pa
 
 - [Panels](/extensions/panels): positions, singletons, per-session panels, the Views menu.
 - [Commands and settings](/extensions/commands-settings).
-- [GMCP and Lua events](/extensions/events): reacting to the game and to triggers.
+- [Events, sessions and GMCP](/extensions/events): reacting to the game and to triggers.
 - [Publish to the marketplace](/extensions/publish).

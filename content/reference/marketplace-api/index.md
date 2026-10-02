@@ -88,7 +88,7 @@ The index has this shape:
 
 | Endpoint | Auth | Parameters | Returns |
 |---|---|---|---|
-| `GET /v1/extensions` | none | query: `q`, `tag`, `category`, `owner` (a publisher handle), `sort`, `page` (from 1), `per` (1–100, default 24) | `SearchPage` |
+| `GET /v1/extensions` | none | query: `q`, `tag`, `category`, `owner` (a publisher handle), `gmcp`, `mcp`, `sort`, `page` (from 1), `per` (1–100, default 24) | `SearchPage` |
 | `GET /v1/extensions/{name}` | optional | `name`: the package name | `ExtDetail`. 404 unknown, 410 deleted |
 | `GET /v1/extensions/{name}/versions` | optional | | `Versions`. 404, 410 |
 | `GET /v1/extensions/{name}/versions/{version}` | optional | | `VersionDetail`. 404, 410 |
@@ -97,7 +97,7 @@ The index has this shape:
 | `GET /v1/tags` | none | | `Facet[]`: tags in use, most common first, at most 200 |
 | `GET /v1/categories` | none | | `Facet[]`: categories in use, most common first |
 
-`q` matches the name, display name, description, tags, categories and owners. `sort` is one of `relevance` (with `q`), `downloads`, `rating`, `updated`, `new`, `name` or `subscribers`.
+`q` matches the name, display name, description, tags, categories and owners. `gmcp` (a package the game sends, such as `Client.Tickets`) matches listings whose latest version declares it, or a parent of it, in `contributes.gmcp` with at least one inbound message or no message table. `mcp` (a package the server offered, such as `dns-com-vmoo-userlist`) matches listings whose latest version declares it in `contributes.mcp`. μClient asks these for **This game sends** in **Extensions → Discover**. `sort` is one of `relevance` (with `q`), `downloads`, `rating`, `updated`, `new`, `name` or `subscribers`.
 
 ## Publish
 

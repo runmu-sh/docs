@@ -8,5 +8,6 @@
 /extensions/
 /extensions/quickstart
 /extensions/publish
+/extensions/hot-reload
 /reference/lua/
 /reference/sdk/

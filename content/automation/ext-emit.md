@@ -1,12 +1,12 @@
 ---
 title: Talking to extensions
-description: Send data from an alias or trigger to your TypeScript extensions with ext.emit, and the limits that apply.
+description: Send data from an alias or trigger to your TypeScript extensions with ext.emit, receive their events with ext.on, and the limits that apply.
 audience: automation
 ---
 
 # Talking to extensions
 
-`ext.emit(name, data)` sends `data` to the TypeScript extensions of every client attached to the session. It is the one way Lua talks to an extension. It carries data only, and the extension decides what to draw.
+`ext.emit(name, data)` sends `data` to the TypeScript extensions of every client attached to the session. It carries data only, and the extension decides what to draw. The other way, an extension sends Lua an event that `ext.on` receives.
 
 ```lua
 -- a trigger on "^You enter (.+)\.$"
@@ -32,8 +32,27 @@ mu.lua.on('map.enter', (data, session) => { /* draw it */ });
 - **Transient**: messages are not logged, not kept in snapshots, not replayed. A client that attaches later does not see earlier ones. If an extension needs state, send it again or have the extension ask with a command.
 - **Private**: on the wire the event is encrypted with the world key, like GMCP.
 
+## Hear an extension: ext.on
+
+An extension sends an event to the session's Lua with `mu.lua.emit` <Since v="1.10" />. `ext.on(name, fn)` handles it:
+
+```lua
+ext.on("map.goto", function(data)
+  send("walk " .. data.room)
+end)
+```
+
+```ts
+await mu.lua.emit('map.goto', { room: 'well' }, { sid });
+```
+
+- **`name`** follows the same rule as `ext.emit`. A bad one raises an error starting `ext.on:`, such as `ext.on: event name 'nospace' needs a namespace`.
+- **`fn`** gets the data, converted from JSON. Several handlers for one name run in the order they were added. `ext.on(name, nil)` removes every handler for the name.
+- **Errors**: a handler that fails shows as an `[ERROR] ext.on('<name>'): …` line in the terminal, and the other handlers still run.
+- **Limits**: as for `ext.emit`: 64 KB of JSON and 200 events a second per session, transient and encrypted. `mu.lua.emit` resolves `false` when the event was not delivered.
+
 ## Next
 
-- [GMCP and Lua events](/extensions/events): the extension side of `mu.lua.on`.
+- [Events, sessions and GMCP](/extensions/events#talk-to-lua): the extension side of `mu.lua.on` and `mu.lua.emit`.
 - [GMCP and MSDP data](/automation/gmcp): the data most emits carry.
 - [Every Lua function](/reference/lua/).

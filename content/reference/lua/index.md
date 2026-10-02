@@ -33,6 +33,8 @@ The backend sets `command`, `line`, `matches` and `multimatches` afresh before e
 | `enableTrigger(name)`, `disableTrigger(name)`, `killTrigger(name)` | Toggle or delete a trigger (saved) | nothing |
 | `exists(name, "alias" \| "trigger")` | Whether an alias or trigger with that name exists | `true` or `false` |
 | `ext.emit(name, data)` | Send a data message to extensions ([details](/automation/ext-emit)) | `true` when sent, `false` when dropped |
+| `ext.on(name, fn)` | Handle an event an extension sends with `mu.lua.emit`. `fn` is `nil` to remove the handlers ([details](/automation/ext-emit#hear-an-extension-ext-on)) | nothing |
+| `gmcp.send(package, data)` | Send a GMCP message to the game ([details](/automation/gmcp#send-gmcp)) | `true` when queued, `false` when not sent |
 
 ## Arguments and results
 
@@ -85,6 +87,23 @@ It raises an error, with a message that starts `ext.emit:`, when:
 - the JSON is over 65,536 bytes.
 
 The full rules are on [Talking to extensions](/automation/ext-emit).
+
+### ext.on
+
+`ext.on(name, fn)` adds `fn` as a handler for the extension event `name`. `name` follows the `ext.emit` rule. `fn` gets the event's data converted from JSON, as `gmcp` values are. Handlers for one name run in the order they were added. `ext.on(name, nil)` removes them all.
+
+It raises an error, with a message that starts `ext.on:`, when `name` is invalid (`ext.on: event name 'nospace' needs a namespace`) or `fn` is neither a function nor `nil` (`ext.on: handler must be a function, got number`). An error inside a handler is printed as an `[ERROR] ext.on('<name>'): …` line, and the other handlers still run. Register handlers in a startup script so they exist before an extension sends.
+
+### gmcp.send
+
+`gmcp.send(package, data)` sends `package` with `data` as JSON, or the bare package when `data` is `nil`. It returns `true` when the message was queued, and `false` when GMCP is not negotiated, the session is over 50 GMCP messages a second (shared with its extensions), or the queue is full.
+
+It raises an error, with a message that starts `gmcp.send:`, when:
+
+- `package` is not a string of 1–128 characters of `A-Z a-z 0-9 . _ -` (`gmcp.send: package must be a string, got nil`);
+- `package` is reserved for μClient: `Core.Hello`, `Core.Supports.*`, `Core.KeepAlive`, `Core.Ping`, `Char.Login*` (`gmcp.send: 'Core.Ping' is reserved for the client core`);
+- `data` cannot convert to JSON;
+- the JSON is over 64 KB (`gmcp.send: data is 70000 bytes, over the 64 KB limit`).
 
 ## Next
 

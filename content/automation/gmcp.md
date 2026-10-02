@@ -1,6 +1,6 @@
 ---
 title: GMCP and MSDP data
-description: Read the game's GMCP and MSDP data from the gmcp table in aliases, triggers, macros and the lua command.
+description: Read the game's GMCP and MSDP data from the gmcp table in aliases, triggers, macros and the lua command, and send GMCP to the game with gmcp.send.
 ---
 
 # GMCP and MSDP data
@@ -53,7 +53,7 @@ if hp and max and hp < max / 3 then
 end
 ```
 
-A value that reads as a number becomes a Lua number. MSDP tables and arrays become Lua tables. When the game offers MSDP, μClient asks it to report `CHARACTER_NAME`, `HEALTH`, `HEALTH_MAX`, `MANA`, `MANA_MAX`, `ROOM_NAME` and `ROOM_EXITS`.
+A value that reads as a number becomes a Lua number. MSDP tables and arrays become Lua tables. When the game offers MSDP, μClient itself asks it to report only `CHARACTER_NAME`. The bundled MSDP adapter adds `ROOM_NAME`, `ROOM_VNUM`, `ROOM_EXITS`, `AREA_NAME` and `ROOM`, and each extension adds the variables it declares. A variable no one asked for, such as `HEALTH`, appears only when the game sends it anyway.
 
 ::: tip
 Extensions get the same MSDP variables as packages named `MSDP.<VAR>`. In Lua the prefix is lower case, as in `gmcp.msdp.HEALTH`.
@@ -61,9 +61,25 @@ Extensions get the same MSDP variables as packages named `MSDP.<VAR>`. In Lua th
 
 ## What μClient asks for
 
-When the game turns GMCP on, μClient introduces itself with `Core.Hello` and asks for these packages with `Core.Supports.Set`: `Char`, `Char.Vitals`, `Char.Status`, `Char.StatusVars`, `Char.Items`, `Char.Skills`, `Char.Defences`, `Char.Afflictions`, `Room`, `Room.Info`, `Room.Players`, `Comm`, `Comm.Channel`, `IRE.Rift`, `IRE.Composer` and `External.Discord`. Games send the ones they support. Packages outside that list land in the table the same way.
+When the game turns GMCP on, μClient introduces itself with `Core.Hello` and asks for `Core 1` and `Char 1` with `Core.Supports.Set`. The rest of the list comes from what is installed: the bundled protocol adapters add `Room 1`, `Comm.Channel 1` and `Client.Media 1`, and each extension enabled in the world adds the packages it declares. The list changes with `Core.Supports.Add` and `Remove` as extensions turn on and off. The GMCP inspector's **Supports** tab shows the current list and who asked for each package. Packages outside the list land in the table the same way.
 
-Lua can read GMCP but cannot send it. An extension can, with `mu.gmcp.send` (see [GMCP and Lua events](/extensions/events)).
+## Send GMCP
+
+`gmcp.send(package, data)` sends a GMCP message to the game:
+
+```lua
+gmcp.send("Char.Skills.Get", { group = "combat" })
+gmcp.send("Core.Ping")   -- raises an error: reserved
+gmcp.send("IRE.Rift.Request")
+```
+
+- **`package`**: 1–128 characters of `A-Z a-z 0-9 . _ -`.
+- **`data`**: converts to JSON like `ext.emit`'s data, at most 64 KB. `nil` sends the bare package name.
+- **Result**: `true` when the message was queued, `false` when the game has not turned GMCP on, the session is over its limit of 50 GMCP messages a second (shared with its clients' extensions), or the queue is full.
+- **Reserved**: `Core.Hello`, `Core.Supports.*`, `Core.KeepAlive`, `Core.Ping` and `Char.Login*` are sent by μClient only. Sending one raises `gmcp.send: '<package>' is reserved for the client core`.
+- **Errors**: a bad package name or data that will not convert raises an error that starts `gmcp.send:`, such as `gmcp.send: data is 70000 bytes, over the 64 KB limit`.
+
+An extension sends GMCP with `mu.gmcp.send` (see [Send GMCP](/extensions/events#send-gmcp)).
 
 ## React to a change
 
@@ -82,4 +98,5 @@ end
 
 - [Triggers](/automation/triggers): where most `gmcp` checks live.
 - [Talking to extensions](/automation/ext-emit): pass `gmcp` data on to a panel.
+- [The GMCP inspector](/extensions/protocols#the-gmcp-inspector): watch what the game sends.
 - [Every Lua function](/reference/lua/).

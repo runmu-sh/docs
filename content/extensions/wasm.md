@@ -82,6 +82,6 @@ An extension loaded from the dev server loads any path, unpinned, fresh on every
 
 ## Next
 
-- [Hot reload](/extensions/hot-reload): the dev server.
+- [Hot reload and tests](/extensions/hot-reload): the dev server.
 - [The manifest](/extensions/manifest): the rest of `muclient`.
 - [Publish to the marketplace](/extensions/publish): the `.wasm` ships in the package.

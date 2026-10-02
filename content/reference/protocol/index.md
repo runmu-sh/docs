@@ -98,6 +98,7 @@ Encrypted fields are base64. `nonce` and `ciphertext` are separate fields on eve
 |---|---|---|
 | `input` | `{ sid, nonce, ciphertext, localEcho? }` | A line of input. The plaintext is the text as typed. With `localEcho: true` the server broadcasts it back as `input.echo` |
 | `session.history` | `{ sid }` | Ask for the recent history. The answer is `history.dump` |
+| `session.attend` | `{ sid, away? }` | The player is looking at this session here, or with `away: true` no longer is. It decides which client owns the session's effects |
 | `latency.ping` | `{ satellite_id? }` | Without `satellite_id` the server answers `latency.pong` at once. With one it pings that satellite and answers `latency.satellite` |
 | `client.telemetry` | `{ event, ts, client_type, … }` | Debug telemetry. The server logs it and sends no answer |
 
@@ -112,7 +113,16 @@ Encrypted fields are base64. `nonce` and `ciphertext` are separate fields on eve
 | `gmcp` | `{ sid, nonce, ciphertext, ts }` | A GMCP message. The plaintext is `{ package, data }`. MSDP variables arrive as package `MSDP.<VAR>`. `ts` is in milliseconds |
 | `ext.emit` | `{ sid, nonce, ciphertext, ts }` | A Lua [`ext.emit`](/automation/ext-emit). The plaintext is `{ name, data }` |
 | `history.dump` | `{ sid, lines, gmcp }` | The last 100 lines of the current connection, `[{ line_index, ts, text }]`, and the latest `gmcp` value per package, `[{ nonce, ciphertext, ts }]` |
-| `mcp.edit` | `{ sid, name, upload, code }` | A MOO `#$# edit` block from the game: the editor title, the command that uploads it, and the code. Sent unencrypted, to one client only |
+| `mcp.edit` | `{ sid, name, upload, code }` | A MOO `#$# edit` block from the game: the editor title, the command that uploads it, and the code. Sent unencrypted, to one client only, when **Accept LambdaCore local editing** is on |
+| `mcp` | `{ sid, nonce, ciphertext, ts }` | A decoded MCP 2.1 message. The plaintext holds the message name, its arguments and its cord |
+| `mcp.negotiation` | `{ sid, nonce, ciphertext }` | The MCP negotiation result: each package's server range, client range and agreed version |
+| `session.supports` | `{ sid, active }` | The advertised `Core.Supports` set changed: `{ package: version }` |
+| `session.attention` | `{ sid, conn }` | The connection that owns the session's effects |
+| `session.latency` | `{ sid, latencyMs }` | The round trip of the last `Core.Ping` |
+| `session.goodbye` | `{ sid, nonce, ciphertext }` | The game's `Core.Goodbye` message |
+| `session.gap` | `{ sid, from, to }` | This client missed the events numbered `from` to `to`. It catches up with `replay: true` |
+
+Each session event also carries `seq`, its number in the session, and the events a client caused carry `conn`, its connection id.
 
 `output` and `input.echo` decrypt to UTF-8 text. So does each history line's `text`. The backend keeps at most 128 GMCP packages per session for `history.dump`. `ext.emit` messages are never stored or replayed.
 
@@ -179,11 +189,22 @@ Parameters are the fields of `a[0]`. A `?` marks an optional one.
 | `session.markRead` | `sid`, `lineIndex` | `null` |
 | `session.rename`, `sessions.rename` | `sid`, `name` | `{ sid, name }` |
 | `session.stats` | `sid` | `{ bytesIn, bytesOut, telnet }` |
-| `session.sendGmcp` | `sid`, `package`, `data?` | `{ sent: true }` |
+| `session.send` | `sid`, `nonce`, `ciphertext`, `key?`, `ext?` | `{ sent: true }` or `{ duplicate: true }`. A command line, sealed with the world key |
+| `session.sendGmcp` | `sid`, `nonce`, `ciphertext`, `key?`, `ext?` | `{ sent: true }` or `{ duplicate: true }`. The plaintext is `{ package, data }` |
+| `session.supports` | `sid`, `ext`, `add?`, `remove?`, `report?`, `unreport?` | `{ declarations, active, msdpReports }`. Declare or withdraw GMCP packages (`"Room 1"`) and MSDP reports for this connection and extension |
+| `session.sendMsdp` | `sid`, `command`, `variable`, `value?` | `{ sent }`. `command` is `SEND`, `LIST` or `RESET` |
+| `session.luaEmit` | `sid`, `nonce`, `ciphertext` | `{ sent }`. Runs the session's Lua `ext.on` handlers. The plaintext is `{ name, data }` |
+| `session.gmcpLogin` | `sid`, `nonce?`, `ciphertext?` | `{ ok }`. Seals the GMCP login `{ account, password }` for the session. Without a ciphertext it forgets them |
+| `session.sendMcp` | `sid`, `nonce`, `ciphertext`, `key?`, `ext?` | `{ sent: true }` or `{ duplicate: true }`. An MCP message, sealed |
+| `session.mcpDeclare` | `sid`, `packages`, `cords?`, `legacyEdit?` | `{ ok }`. The MCP packages this connection supports, `[{ package, min, max }]` |
+| `session.mcpCord` | `sid`, `op: "open"`, `type`, or `sid`, `op: "close"`, `id` | `{ id }` or `{ closed }` |
+| `session.reserveKey` | `sid`, `key`, `ext?` | `{ fresh }`. Claim an idempotency key without sending |
 
 `connectionPreferences` is a list tried in order. Each entry is `{ type: "satellite", satellite_id }`, `{ type: "any_satellite" }` or `{ type: "cloud" }`. The outcome of `session.reconnect` arrives later as `session.connected` or `session.connection_failed`.
 
-`session.sendGmcp` takes a `package` of 1–128 characters of `A-Z a-z 0-9 . _ -` and `data` of at most 64 KB. It fails with `GMCP_NOT_NEGOTIATED` when the game has not agreed to GMCP, `GMCP_RATE_LIMITED` past 50 messages a second, or "Session not connected".
+`session.sendGmcp` takes a `package` of 1–128 characters of `A-Z a-z 0-9 . _ -` and `data` of at most 64 KB. It fails with `GMCP_RESERVED` for a package only the client core sends (`Core.Hello`, `Core.Supports.*`, `Core.KeepAlive`, `Core.Ping`, `Char.Login*`), `GMCP_NOT_NEGOTIATED` when the game has not agreed to GMCP, `GMCP_RATE_LIMITED` past 50 messages a second, or "Session not connected". The plaintext `package` and `data` parameters still work and are [deprecated](/reference/deprecations#protocol) since 1.10.
+
+A `key` (at most 200 bytes) makes a send idempotent: the backend sends it once per session for 10 minutes, scoped to `ext`, and answers `{ duplicate: true }` to every later send with that key.
 
 ### Worlds
 
@@ -258,6 +279,19 @@ A script object has `id`, `worldId`, `name`, `scriptEncrypted`, `enabled`, `sort
 |---|---|---|
 | `logs.list` | `worldId` | `[{ connectionId, sessionId, startedAt, endedAt, disconnectReason, sizeBytes }]` |
 | `logs.get_content` | `worldId`, `sessionId`, `connectionId`, `limit?` (default 100), `before?` | `[{ line_index, ts, text }]`, `text` encrypted like history lines |
+
+### Extension data
+
+The backend stores extensions' synced storage sealed, and relays sync channels. It never sees the values.
+
+| Method | Parameters | Result |
+|---|---|---|
+| `ext.data.get` | `ext`, `scope` (`account` or `world`), `worldId?`, `since?` | `{ items: [{ key, nonce, ciphertext, hlc, deleted? }] }` |
+| `ext.data.put` | `ext`, `scope`, `worldId?`, `items` | `{ accepted: [{ key, hlc }], rejected }`. Later clocks win per key. The other clients get `ext.data.updated` |
+| `ext.data.clear` | `ext` | `{ deleted }`. The other clients get `ext.data.cleared` |
+| `ext.data.usage` | `ext` | `{ account, worlds }`, bytes used |
+| `ext.sync` | `scope` (`session`, `world` or `account`), `sid?`, `worldId?`, `ext`, `topic`, `nonce`, `ciphertext` | `{ ok: true }`. Relayed as `ext.sync` to the account's other clients in scope. Never stored |
+| `ext.sync.last` | the same, without the value | `{ items: [{ conn, nonce, ciphertext, ts }] }`, the last value per connection |
 
 ### Extensions
 
