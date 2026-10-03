@@ -1,11 +1,47 @@
 ---
 title: Changelog
-description: What each version of the @muclient/sdk extension API added, from 1.0 to 1.12, and the dev tools that go with it.
+description: What each version of the @muclient/sdk extension API added, from 1.0 to 1.14, and the dev tools that go with it.
 ---
 
 # Changelog
 
-This changelog covers the extension SDK, `@muclient/sdk`. Each 1.x version adds members. No version removes or renames one; a few change behaviour, marked below, and one call is [deprecated](/reference/deprecations). Moving from an older version is on [Upgrade to SDK 1.12](/extensions/migrating). For an extension's own changelog, see its marketplace listing.
+This changelog covers the extension SDK, `@muclient/sdk`. Each 1.x version adds members. No version removes or renames one; a few change behaviour, marked below, and some members are [deprecated](/reference/deprecations) until 2.0. Moving from an older version is on [Upgrade to SDK 1.14](/extensions/migrating). For an extension's own changelog, see its marketplace listing.
+
+## 1.14
+
+Extensions own their features. The host keeps neutral registries (Settings tiles and shortcut rows, line routing, context-menu kinds, menu slots, setting migration, panel focus) and names no extension. Released with `@runmu.sh/dev` 0.3.0 and `@runmu.sh/create-extension` 0.5.0. See [Upgrade to SDK 1.14](/extensions/migrating).
+
+- `SettingsSchema.tile` (`SettingsTile`: `glyph`, `order?`, `width?`): the page becomes a tile on the Settings hub. The manifest accepts `contributes.settings.tile`. See [A tile on the Settings hub](/extensions/commands-settings#a-tile-on-the-settings-hub).
+- The setting kind `shortcut` (`ShortcutSpec`: `key`, `command`, `label?`, `hint?`, `group?`, `when?`): binds a key combo to one of the extension's commands, stored in the player's key bindings.
+- `SettingSpec.migrateFrom`: copy a retired core pref's values once per account. Migratable: `channels.config`, `channels.replyFormat`, `alerts.channels`, `rules.feeds`.
+- `mu.lines.route` (`RouteSpec`, `RouteRule`, `RouteCtx`), `mu.lines.testRoutes` and `mu.lines.patternError`. See [Line routing](/extensions/lines-input#line-routing).
+- `mu.menus.kind` (`ContextKindSpec`), targets as `{ kind, sid, data }` checked against the kind's schema, and the types `JsonSchema`, `ContextKinds` (augmentable), `KindTarget` and `TargetOf`. `ContextMenuSpec` and `menus.context` are generic over the kind. `ContextTarget` gains `panel`.
+- `MenuSpec.slot` `'now-playing'`: the action of the ☰ Sound row's now-playing line.
+- `mu.channels.onMessage(fn, { ownsSettings? })` and `ChannelMessageEvent`; `opts.format` on `mu.channels.send`.
+- `mu.panels.focus(id)`.
+- `mu.prefs` names `effects.performance`, `audio.keySfx` and `audio.keySfxVolume`.
+- Manifest: world packs set extension settings with `contributes.settings.values` (`ext.<id>.<key>`, at most 64 keys).
+- `@runmu.sh/dev/test`: `host.routers`, `host.route(text, { sid })`, `mu.panels.focus`, `tile` in `host.settingsSchema`, shortcut rows, and `menus.add` in `host.calls`.
+
+Behaviour changes:
+
+- `LineEdit.copyTo` and `moveTo` go to the one router registered with `edits: true`. Without one, `copyTo` does nothing and `moveTo` keeps the line in the terminal. Until 2.0, core's legacy feed buffers take them while no extension holds `edits`.
+- Settings → Feeds is no longer a core page. The Feeds extension 2.0 brings its own tile.
+- The client no longer binds Alt+C (Channels) or Alt+R (Scene). The Channels and Scene extensions register `focus.channels` and `focus.scene` under the same ids, so a rebinding still applies.
+- The client no longer opens the `media` panel from the now-playing line. The Media extension registers the action.
+- A saved layout naming a panel no extension provides shows **Awaiting panel …** and **Find in Extensions**.
+- `effects.glow` reads the glow as applied, so it is `false` while performance mode is on.
+- **Settings → Keys** lists extension commands after the client's own.
+
+Deprecated, removed in 2.0: `mu.feeds` and `FeedsView`, `mu.channels.configure`, `ChannelView.muted`, `alert` and `color`, the context kinds `channel`, `channel-message`, `scene-item`, `scene-exit` and `x-*`, and the pack field `contributes.channelsReplyFormat`. See [Deprecations](/reference/deprecations).
+
+## 1.13
+
+- `muclient.modules` and `mu.modules.load(path)`: extra ES modules, loaded the first time they are needed and pinned by sha256 at install.
+- `mu.editor.provide`: an extension supplies the in-game editor. Without one, `mu.editor.open` shows a plain text editor.
+- `mu.mcp.acceptLocalEdit(when?)` for LambdaCore local edit, and `ModalSpec.beforeClose()`.
+
+Behaviour change: MCP simpleedit and LambdaCore local edit are handled by the MOO editor extension (`mooedit`).
 
 ## Dev tools
 

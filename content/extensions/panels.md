@@ -136,6 +136,19 @@ export default defineExtension({
 
 `mu.panels.close(id)` closes every open tab of that panel. `mu.panels.open(id, params, { title?, sid?, focus? })` <Since v="1.7" /> sets the tab title, picks the session's workspace, and with `focus: false` opens the tab without bringing it to the front.
 
+## Focus a panel <Since v="1.14" />
+
+`mu.panels.focus(id)` brings one of your open panels to the front in the active session's workspace and moves keyboard focus into it: to its first `[data-focus-region]` element, else its first focusable element, else the panel. It returns `false` when the panel is not open or is another extension's, and it does not open a closed panel. Bind it to a key with a command of your own:
+
+```ts
+mu.commands.register({
+  id: 'focus.channels', title: 'Go to channels', keys: ['Alt+C'], group: 'Focus', when: 'session',
+  run: () => { mu.panels.focus?.('channels'); },
+});
+```
+
+The client binds no key to a panel it does not render. A shortcut such as Alt+C for Channels or Alt+R for the Scene is registered by the extension that provides the panel, so it goes away when that extension is uninstalled. The `?.` keeps the command working on a 1.13 host, which has no `focus`.
+
 ## One per session
 
 Each session has its own dock, so a panel open in two sessions is mounted twice, each with its own `ctx.sid`. Keep per-session data in `mu.sessions.each`, whose cleanup runs when the session closes, or in `mu.storage.session(sid)`, and read the entry for the `sid` you were mounted with. See [Sessions](/extensions/events#sessions).
@@ -144,7 +157,7 @@ With `perSession: false` <Since v="1.8" />, the panel follows the active session
 
 ## The Views menu
 
-Every registered panel is listed under **☰ → Views**, sorted by `order` (lower first, default 200) <Since v="1.4" />. The client's own panels are Terminal 0, Scene 10, Channels 20, Media 30, Feeds 50, Web page 210, Script editor 300, Logs 310, Session 320 and GMCP 330. The command palette (Ctrl+K) also lists **Open** and the panel's title in lower case for each panel, so the `here` panel gets **Open here**.
+Every registered panel is listed under **☰ → Views**, sorted by `order` (lower first, default 200) <Since v="1.4" />. The client's own panels are Terminal 0, Web page 210, Script editor 300, Logs 310, Session 320 and GMCP 330. The first-party extensions use Scene 10, Channels 20, Media 30 and Feeds 50. The command palette (Ctrl+K) also lists **Open** and the panel's title in lower case for each panel, so the `here` panel gets **Open here**.
 
 `inViewsMenu: false` <Since v="1.1" /> leaves a panel out of Views. Its palette entry stays. Change the title or the listing later with `mu.panels.update` <Since v="1.1" />, which also retitles the open tabs.
 
@@ -192,6 +205,10 @@ mu.panels.badge('tickets', { count: open.length, mention: open.some((t) => t.min
 ## When a panel fails
 
 When `mount` throws, the tab shows **`<title>` crashed · `<message>`** with a **Reload** button, and the rest of the dock keeps working. The error goes to the extension's **log** in **Extensions → Installed** and counts toward the three errors in a minute that disable the extension. Disabling or uninstalling the extension closes its panels.
+
+## A layout without the panel
+
+A saved layout can name a panel that no installed extension provides, such as one from an extension the player has uninstalled or turned off in this world. Its tab shows **Awaiting panel “`<id>`”…** with a **Find in Extensions** button, which opens **Extensions → Discover** searching for the panel id. When an extension that registers the id is enabled, the panel mounts in that tab.
 
 ## Keep state across a reload <Since v="1.2" />
 

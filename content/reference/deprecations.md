@@ -12,6 +12,12 @@ The SDK keeps 1.x backwards compatible. A deprecated call keeps working in 1.x, 
 | Deprecated | Since | Instead |
 |---|---|---|
 | `mu.commands.run(id)` with a core command id outside `PUBLIC_COMMANDS`, such as `panel.open.<id>` | 1.12 | A public command, or the SDK call (`mu.panels.open`). See [Run a command](/extensions/commands-settings#run-a-command). The log says `commands.run('<id>'): not a public command.` once per id |
+| `mu.feeds` and `FeedsView` | 1.14 | `mu.lines.route`, with the lines kept in your extension. See [Line routing](/extensions/lines-input#line-routing). The first use logs a warning. The buffers fill from core's `rules.feeds` only while no router holds `edits` |
+| `mu.channels.configure` | 1.14 | Your own settings, with `mu.channels.onMessage(fn, { ownsSettings: true })`. See [Own the channel settings](/extensions/protocols#own-the-channel-settings). Warns once per activation |
+| `ChannelView.muted`, `alert` and `color` | 1.14 | Read your own per-channel setting |
+| Context kinds `channel`, `channel-message`, `scene-item` and `scene-exit` | 1.14 | The registered kinds `channels.channel`, `channels.message`, `scene.item` and `scene.exit`, with the old fields under `data`. See [Context kinds](/extensions/surfaces#context-kinds). One warning per extension per kind |
+| Unregistered `x-<name>` context kinds | 1.14 | Register `<extId>.<name>` with `mu.menus.kind` |
+| `contributes.channelsReplyFormat` in a world pack | 1.14 | `contributes.settings: { "values": { "ext.channels.replyFormat": "…" } }`. See [World packs](/extensions/manifest#worlds-world-packs). Warns once per pack |
 
 Some versions changed behaviour without removing anything. The [changelog](/reference/changelog) marks each one.
 

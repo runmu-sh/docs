@@ -7,6 +7,8 @@ description: Add commands to the palette with default keys and conditions, defin
 
 A command is an action the player runs from the command palette or a key. A setting is a value the player changes on your extension's own Settings page. Both are registered in `activate` and removed with the extension.
 
+An extension owns its feature end to end: its commands and shortcuts, its Settings page or tile, and the values the feature keeps. The client provides the registries and names no extension, so uninstalling one removes its page, its routing and its shortcuts with it.
+
 ## 1. Register a command
 
 ```ts
@@ -127,10 +129,44 @@ export default defineExtension({
 | `scope` | `both` (default), `world` or `global` |
 | `sync` <Since v="1.9" /> | `account` (default): the value follows the player to every device. `device` keeps it on this device, for what depends on the hardware or the room the player sits in |
 | `when` <Since v="1.9" /> | Show the row only while another of your settings has a value: `{ key: 'sound', equals: true }` |
+| `migrateFrom` <Since v="1.14" /> | A retired core pref this setting replaces. See [Take over a core setting](#take-over-a-core-setting) |
 
 Without `kind`, the client picks one: `toggle` for a boolean default, `select` when there are `options`, `range` for a number with a `min`, else `text`. A `text` row with a number default takes numbers only.
 
 A key may contain `.` (`sound.volume`). One that names another extension's namespace (`ext.other.x`) is refused.
+
+### Shortcut rows <Since v="1.14" />
+
+A `kind: 'shortcut'` item binds a key combo to one of your own commands, on your page:
+
+```ts
+mu.commands.register({ id: 'media.stop', title: 'Media: stop', keys: ['Alt+S'], run: stop });
+mu.settings.define({
+  title: 'Media',
+  items: [{ key: 'keys.stop', kind: 'shortcut', command: 'media.stop', label: 'Stop playback' }],
+});
+```
+
+| Field | |
+|---|---|
+| `key` | The name within your extension |
+| `command` | A command id your extension registers, with `mu.commands.register` or `contributes.commands`. Its `keys` are the default |
+| `label` | Default: the command's title |
+| `hint`, `group`, `when` | As for other rows |
+
+The combos are stored in the player's key bindings, the entry **Settings → Keys** edits for that command. `mu.settings.get('keys.stop')` returns them as `string[]`, `set(key, combos)` rebinds (a combo is taken off any other command), and `set(key, null)` restores the command's `keys`. `watch` also fires when the player rebinds the command on the Keys page. The row is hidden until the command is registered. A command that belongs to the client or to another extension is refused with the warning `setting "<key>" refused: command "<id>" belongs to another extension or to the client`.
+
+### Take over a core setting <Since v="1.14" />
+
+Some values that the client used to keep for a feature now belong to the extension that provides the feature. `migrateFrom` names the core pref a setting replaces:
+
+```ts
+{ key: 'replyFormat', label: 'Reply format', default: '{channel} {text}', migrateFrom: 'channels.replyFormat' }
+```
+
+On the first define, the host copies the old key's stored values, for all worlds and per world, into the setting where it has none. It does this once per account, and records it in the synced pref `mu.migrated`. Until a world pack sets the new key, the old key's world-pack defaults apply. The old values stay in place until 2.0. A setting declared in the manifest migrates before the extension starts.
+
+The keys that can migrate in 1.14 are `channels.config`, `channels.replyFormat`, `alerts.channels` and `rules.feeds`. Any other key is ignored with a warning.
 
 Define settings before you read them. `get`, `set` and `watch` on a key that is not defined throw `setting "…" is not defined (mu.settings.define)`.
 
@@ -141,9 +177,29 @@ The page title is `title` (default your extension id). The player reaches it two
 - **☰ → Extensions → Installed**, then **settings** on your extension's card;
 - from your code, with `mu.settings.open()`. Tie it to a command or a button in your panel.
 
-The page hangs under the **Extensions** tile of Settings, so **Back** from it leads to **Extensions → Installed**. The switch at the top of Settings, **This world** or **All worlds**, picks the level the rows edit. A row that is `scope: 'global'` shows **all worlds only** when you hover it in **This world**.
+Without a `tile`, the page hangs under the **Extensions** tile of Settings, so **Back** from it leads to **Extensions → Installed**. The switch at the top of Settings, **This world** or **All worlds**, picks the level the rows edit. A row that is `scope: 'global'` shows **all worlds only** when you hover it in **This world**.
 
 Values follow the player's account to every device, except `sync: 'device'` rows. Two devices that change one value resolve by the later write.
+
+### A tile on the Settings hub <Since v="1.14" />
+
+Give the schema a `tile` and your page becomes its own tile on the Settings hub, beside the client's pages:
+
+```ts
+mu.settings.define({
+  title: 'Feeds',
+  tile: { glyph: '⇶', order: 950, width: 'min(34rem, 94vw)' },
+  items: [/* … */],
+});
+```
+
+| Field | |
+|---|---|
+| `glyph` | One or two characters shown on the tile. A longer one is replaced by `⧉` |
+| `order` | The position on the hub. The client's own pages sit at 100, 200 and so on (Visual 100, Keys 900, Triggers 1000, Extensions 1100, Backup 1500). Default 1600 |
+| `width` | A wider Settings window while the page is open, as a CSS width such as `min(34rem, 94vw)`. A value that is not a plain CSS width is dropped. Default the window's 25rem |
+
+A `tile` in `contributes.settings` shows the tile before the extension starts and in safe mode. Uninstalling the extension removes the tile with the page.
 
 ### More than rows <Since v="1.9" />
 
@@ -159,7 +215,7 @@ mu.settings.define({
 });
 ```
 
-A settings schema can also live in the manifest, as `contributes.settings`. The page then renders before the extension starts.
+A settings schema can also live in the manifest, as `contributes.settings`. The page then renders before the extension starts. A world pack can set your settings' defaults for its worlds with `contributes.settings.values`. See [World packs](/extensions/manifest#worlds-world-packs).
 
 ## Scope
 
@@ -207,13 +263,15 @@ Before 1.9, `watch` did not call `fn` at once. Code that calls `get` and then `w
 
 ## Core preferences <Since v="1.9" />
 
-`mu.prefs` reads some of the player's own settings, under names that stay stable: `a11y.reduceMotion`, `a11y.screenReader`, `a11y.speak`, `effects.calm`, `effects.glow`, `theme.id`, `audio.volume` (0 to 1), `audio.muted`, `text.fontSize` (px), `text.fontFamily` and `locale`. They are read-only. `watch` calls `fn` at once and on every change.
+`mu.prefs` reads some of the player's own settings, under names that stay stable: `a11y.reduceMotion`, `a11y.screenReader`, `a11y.speak`, `effects.calm`, `effects.glow`, <Since v="1.14" /> `effects.performance`, `theme.id`, `audio.volume` (0 to 1), `audio.muted`, <Since v="1.14" /> `audio.keySfx` and `audio.keySfxVolume` (0 to 1, before the master volume), `text.fontSize` (px), `text.fontFamily` and `locale`. They are read-only. `watch` calls `fn` at once and on every change.
 
 ```ts
 mu.prefs.watch('a11y.reduceMotion', (on) => { if (on) stopAnimation(); else startAnimation(); });
 ```
 
-For looks, prefer CSS: theme variables, and the `data-calm` and `data-theme` attributes on `<html>`.
+`effects.glow` reads the glow as applied, so it is `false` while performance mode is on.
+
+For looks, prefer CSS: theme variables, and the `data-calm`, `data-perf` and `data-theme` attributes on `<html>`.
 
 The scaffold's `src/index.ts` uses the same shape.
 
@@ -221,5 +279,5 @@ The scaffold's `src/index.ts` uses the same shape.
 
 - [Panels](/extensions/panels): the panel your command opens.
 - [The manifest](/extensions/manifest): declare commands and settings in `contributes`.
-- [Storage](/extensions/storage): data your extension keeps, rather than values the player edits.
+- [Storage](/extensions/storage): data your extension keeps, separate from the values the player edits.
 - [SDK reference](/reference/sdk/): `CommandSpec`, `SettingSpec` and `mu.settings` in full.

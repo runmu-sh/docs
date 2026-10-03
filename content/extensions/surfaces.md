@@ -57,12 +57,48 @@ mu.menus.context({
   run: (t) => mu.sessions.send(`look ${t.word}`, t.sid),
 });
 
-mu.menus.target(rowEl, { kind: 'x-ticket', sid, data: { id: 12 } });
+mu.menus.kind({ id: 'tickets.ticket', title: 'Ticket', schema: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } } });
+mu.menus.target(rowEl, { kind: 'tickets.ticket', sid, data: { id: 12 } });
 ```
 
 `menus.add` puts a row in a menu: `slot: 'main'` is the **☰** menu (with `section` `actions` or `app`, and an `icon` from μClient's glyph set), `'world'` the world menu, `'tab'` a session tab's menu, and `'panel:<id>'` the tab menu of one of your panels. Give it a `command` id or a `run` function, and optionally `order` and `when`.
 
-`menus.context` adds an entry to the context menu of a target kind: `line`, `word`, `link`, `selection`, `channel`, `channel-message`, `scene-item`, `scene-exit`, `world`, `tab`, or your own `x-…` kind. `run` and a function `title` get the target. Core's own entries come first, then extensions' by `order` (default 1000). `when(target)` hides an entry. `menus.target(el, target)` marks an element of yours: right-click or long-press inside it opens that target's menu.
+<Since v="1.14" /> `slot: 'now-playing'` is the action of the now-playing line in the **☰** menu's Sound row. `title` is its tooltip and accessible name, and `icon` is ignored. The most recently added row whose `when` holds is used. Without one, the line is plain text. A media extension uses it to open its panel:
+
+```ts
+try {
+  mu.menus.add({ id: 'media.open', slot: 'now-playing', title: 'open media', run: () => mu.panels.open('media', undefined, { focus: true }) });
+} catch { /* a host before 1.14 throws unknown slot "now-playing" */ }
+```
+
+`menus.context` adds an entry to the context menu of a target kind. `run` and a function `title` get the target. Core's own entries come first, then extensions' by `order` (default 1000). `when(target)` hides an entry. `menus.target(el, target)` marks an element of yours: right-click or long-press inside it opens that target's menu.
+
+### Context kinds <Since v="1.14" />
+
+The client renders the kinds `line`, `word`, `link`, `selection`, `world`, `tab` and `panel` (a panel's dock tab, `{ kind: 'panel', panel, sid }`). Every other kind belongs to the extension that shows it, and the extension registers it:
+
+| `mu.menus.kind({ id, title, schema? })` | |
+|---|---|
+| `id` | `<extId>.<name>`, with a name matching `[a-z0-9][a-z0-9-]{0,63}`. It throws when the id lacks your extension's prefix or is taken |
+| `title` | What the target is, for the menu's accessible label (`'Channel message'`) |
+| `schema` | A JSON Schema checked against `data` on every `menus.target` call of the kind. A mismatch throws `menus.target(<kind>): <path>: <problem>` |
+
+Only the extension that registered a kind publishes targets of it, as `{ kind, sid, data }`. Any extension may add entries for it with `menus.context`. An entry on a kind whose owner is not active stays idle until a target of that kind appears. Dispose, or deactivation, removes the kind.
+
+To type `t.data` in your entries, augment `ContextKinds`. The SDK declares none:
+
+```ts
+declare module '@muclient/sdk' {
+  interface ContextKinds { 'channels.message': { key: string; message: ChannelMessage } }
+}
+
+mu.menus.context({
+  id: 'quote', target: 'channels.message', title: 'Quote',
+  run: (t) => mu.input.fill(`> ${t.data.message.text}`, { sid: t.sid ?? undefined }),
+});
+```
+
+The kinds `channel`, `channel-message`, `scene-item` and `scene-exit` are deprecated. They map to `channels.channel`, `channels.message`, `scene.item` and `scene.exit`, with the old fields under `data`. An entry on an old kind still gets the old flat target, and a target published with an old kind reaches entries on the new kind as `{ kind, sid, data }`. Unregistered `x-<name>` kinds still work. Each logs one warning per extension per kind. See [Deprecations](/reference/deprecations).
 
 ## Palette
 
