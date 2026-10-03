@@ -90,13 +90,13 @@ What μClient sets up for the extension. Since <Since v="1.8" /> it acts on thes
 |---|---|
 | `panels` | `[{ id, title, order?, defaultPosition?, perSession?, singleton?, inViewsMenu?, icon? }]`. Listed in the Views menu before activation. A saved layout keeps the panel's slot with a placeholder (**Loading Room notes…**, then **Room notes is off in this world** or **Room notes failed to load**) until `mu.panels.register` with the same id replaces it |
 | `commands` | `[{ id, title, keys?, when? }]`. Listed in the palette and **Settings → Keys** before activation. Running one starts the extension first |
-| `settings` | A package path to a settings schema (`"settings.json"`), or an inline `{ title?, items }`. The Settings page renders from it before activation |
+| `settings` | A package path to a settings schema (`"settings.json"`), or an inline `{ title?, items, tile? }`. The Settings page renders from it before activation. <Since v="1.14" /> A `tile` (`{ glyph, order?, width? }`) puts the page on the Settings hub before activation and in safe mode, and an inline item may carry `migrateFrom`. See [Commands and settings](/extensions/commands-settings#a-tile-on-the-settings-hub). A world pack uses `{ values }` instead, below |
 | `gmcp` | GMCP packages with versions, `["Room 1", "Char.Items 1"]`. μClient adds them to `Core.Supports` on every session of a world where the extension is enabled, before activation too, and withdraws them when it is disabled there. An entry may be an object with message contracts, below |
 | `msdp` | MSDP variables, `["ROOM_NAME", "ROOM_EXITS"]`. μClient sends `REPORT` for them the same way |
 | `mcp` | MCP 2.1 packages: `[{ package, min, max, messages? }]`. Negotiated with a MOO while the extension is live in a session. See [Protocols](/extensions/protocols#mcp-2-1) |
 | `storage` | The keys you store, by tier: `{ "account": ["notes"], "world": ["visited"] }`. Listed in the backup and the uninstall prompt. Not enforced. See [Storage](/extensions/storage) |
 | `linePhases` | The [line phases](/extensions/lines-input#line-phases) you register stages in. `transform` or `route` makes the install prompt say **Changes game text (line transform or routing stages).** |
-| `compose`, `verbs`, `channelsReplyFormat` | A world pack's defaults. See [`worlds`](#worlds-world-packs) |
+| `compose`, `verbs` | A world pack's defaults. See [`worlds`](#worlds-world-packs). `channelsReplyFormat` is deprecated since 1.14 |
 
 Panel and command entries need an `id` of 1–128 of `A-Z a-z 0-9 . _ : -`, starting with a letter or digit, and a `title`. Keep them in step with what your code registers: a runtime `register` of an id the manifest does not declare still works.
 
@@ -155,13 +155,13 @@ Other extensions this one needs, by id or package name, each with a version rang
 "contributes": {
   "compose": [{ "id": "pose", "label": "Pose", "prefix": "." }, { "id": "looc", "label": "LOOC", "prefix": "looc " }],
   "verbs": ["look", { "label": "Character sheet", "send": "@stats" }],
-  "channelsReplyFormat": "{channel} {text}"
+  "settings": { "values": { "ext.channels.replyFormat": "{channel} {text}" } }
 }
 ```
 
 An extension with `worlds.hosts` is a **world pack**: a game's defaults, in one package, for the worlds at its hosts. Up to 32 hosts. `example.org` matches that host and its subdomains, and `*.example.org` subdomains only. With `suggest: true`, μClient offers to enable it when the player adds or connects a matching world.
 
-While it is enabled in a matching world, its `compose` modes, palette `verbs` (a string, or `{ label, send }`) and `channelsReplyFormat` are that world's defaults. The player's own settings always win. μClient itself ships no game defaults: without a pack, the compose bar has **Say** alone and the palette's verbs are Look, Who is online and Inventory. The bundled pack for Underspire, `@runmu.sh/pack-underspire`, is the example to copy. See [World packs](/extensions/protocols#world-packs).
+While it is enabled in a matching world, its `compose` modes, palette `verbs` (a string, or `{ label, send }`) and <Since v="1.14" /> `settings.values` are that world's defaults. `settings.values` sets other extensions' settings by full key, `ext.<id>.<key>`: at most 64 keys, each at most 8 KB of JSON. `contributes.channelsReplyFormat` still works, warns once per pack and stops working in 2.0; set `ext.channels.replyFormat` instead. The player's own settings always win. μClient itself ships no game defaults: without a pack, the compose bar has **Say** alone and the palette's verbs are Look, Who is online and Inventory. The bundled pack for Underspire, `@runmu.sh/pack-underspire`, is the example to copy. See [World packs](/extensions/protocols#world-packs).
 
 ### `capabilities`
 
@@ -189,7 +189,7 @@ The rules run in three places. The build check is the strictest, so a package th
 - the client, when it reads a package folder or a dev server;
 - the μClient backend, when it fetches an `npm:`, `git+https://` or `.tgz` source.
 
-They share one JSON Schema, `docs/overhaul/schema/muclient-manifest.v1.schema.json` in the [μClient repository](https://github.com/runmu-sh/client). Point your editor at it for completion in `package.json`.
+They share one JSON Schema, [`clients/extensions/schema/muclient-manifest.v1.schema.json`](https://github.com/runmu-sh/client/blob/main/clients/extensions/schema/muclient-manifest.v1.schema.json) in the μClient repository. Point your editor at it for completion in `package.json`.
 
 ```sh
 npm run check

@@ -56,6 +56,37 @@ mu.channels.provide(sid, {
 
 For each Scene field the provider with the highest `priority` wins, and disposing one hands the field back to the next. `channels.provide` takes a channel `list` (which creates channels and sets their caption and command), one `message`, or `players` per channel. `mu.media.setBase(url, sid?)` sets the base URL cue names resolve against, and `mu.media.showImage({ url, caption?, line? }, sid?)` adds a picture to the session's gallery, inline under `line` when you give one.
 
+## Own the channel settings <Since v="1.14" />
+
+The host keeps a session's channel list, messages, unread counts, mentions and read markers. Per-channel mute, alert level and colour, the reply format and the alert toggle belong to the extension that draws the channels, as its own settings.
+
+```ts
+mu.settings.define({
+  title: 'Channels',
+  items: [
+    { key: 'config', label: 'Channels', kind: 'json', default: {}, scope: 'world', migrateFrom: 'channels.config' },
+    { key: 'replyFormat', label: 'Reply format', default: '{channel} {text}', migrateFrom: 'channels.replyFormat' },
+    { key: 'alerts', label: 'Channel alerts', default: true, migrateFrom: 'alerts.channels' },
+  ],
+  sections: [{ page: 'alerts', title: 'Channels', keys: ['alerts'] }],
+});
+
+mu.channels.onMessage((e) => {
+  const muted = mu.settings.get<Record<string, { muted?: boolean }>>('config', { sid: e.sid })[e.channel]?.muted;
+  if (e.message.mention && !e.read && !muted && mu.settings.get('alerts', { sid: e.sid })) {
+    mu.notify.mention({ sid: e.sid, title: e.caption, body: e.message.text, key: e.seq != null ? `${e.seq}:mention` : undefined });
+  }
+}, { ownsSettings: true });
+
+await mu.channels.send(text, key, sid, { format: mu.settings.get('replyFormat', { sid }) });
+```
+
+`mu.channels.onMessage(fn, opts?)` calls `fn` with a `ChannelMessageEvent` for every message stored on a channel in any session: `sid`, `worldId`, `channel` (the key), `caption`, `message`, `seq` (when the game sent one, the same on every client) and `read` (already read on another device). With `ownsSettings: true`, while it is registered, the host stops applying its own per-channel settings, the reply format and **Settings → Alerts → Channel alerts**. It counts unread on every channel, muted ones too, and raises no channel alert; the extension hides muted channels and calls `mu.notify.mention` itself.
+
+`mu.channels.send(text, key?, sid?, { format })` takes the reply template, with `{channel}` and `{text}`. Without `format`, the host uses `{channel} {text}`, or the deprecated core reply format.
+
+`migrateFrom` copies the player's existing values once. See [Take over a core setting](/extensions/commands-settings#take-over-a-core-setting). `mu.channels.configure` and `ChannelView.muted`, `alert` and `color` are deprecated: read your own `config` setting. See [Deprecations](/reference/deprecations).
+
 ## MCP 2.1 <Since v="1.10" />
 
 On MOO worlds the backend speaks MCP 2.1: the handshake and its authentication key, `mcp-negotiate`, multiline values, cords and the core packages. Your extension sees decoded messages and never the key. Declare the packages you handle, and they are negotiated while the extension is live in a session:
@@ -141,7 +172,7 @@ When a game sends a package that no adapter or extension handles, **Extensions �
 
 ## World packs
 
-A world pack is an extension that carries one game's defaults: compose modes, palette verbs and the channel reply format, for the worlds at its hosts. It is an ordinary manifest with [`worlds`](/extensions/manifest#worlds-world-packs). **Extensions → Installed → World packs** lists the packs built into μClient. They are on in a matching world unless the player turns them off there, and the player's own settings always win.
+A world pack is an extension that carries one game's defaults, for the worlds at its hosts: compose modes, palette verbs, and defaults for other extensions' settings, such as the channel reply format. It is an ordinary manifest with [`worlds`](/extensions/manifest#worlds-world-packs). **Extensions → Installed → World packs** lists the packs built into μClient. They are on in a matching world unless the player turns them off there, and the player's own settings always win.
 
 The bundled pack is `@runmu.sh/pack-underspire`, for `underspire.net` and its subdomains. It gives the compose bar Pose (`.`), Emote (`emote `), Say (`say `), LOOC (`looc `) and Look (`@lp `), and the palette fourteen of the game's verbs. A pack with `suggest: true` that the player has not enabled shows **… pack is available for this world** when they connect, with **enable here**, **review** and **not here**.
 

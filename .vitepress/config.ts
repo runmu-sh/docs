@@ -64,7 +64,7 @@ const extensions: DefaultTheme.SidebarItem[] = [
   ] },
   { text: 'Shipping', items: [
     { text: 'Publish to the marketplace', link: '/extensions/publish' },
-    { text: 'Upgrade to SDK 1.12', link: '/extensions/migrating' },
+    { text: 'Upgrade to SDK 1.14', link: '/extensions/migrating' },
   ] },
   { text: 'Reference', items: [
     { text: '@muclient/sdk', link: '/reference/sdk/' },

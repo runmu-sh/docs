@@ -32,5 +32,5 @@ An extension is an npm package with a `muclient` manifest in its `package.json` 
 
 - [Build a panel in 10 minutes](/extensions/quickstart): scaffold one and load it.
 - [The manifest](/extensions/manifest): what goes in `package.json`.
-- [Upgrade to SDK 1.12](/extensions/migrating): from an earlier 1.x.
+- [Upgrade to SDK 1.14](/extensions/migrating): from an earlier 1.x.
 - [SDK reference](/reference/sdk/): every member of `mu`.

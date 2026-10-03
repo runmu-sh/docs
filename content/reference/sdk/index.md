@@ -5,7 +5,7 @@ description: Every exported type, function and member of the extension SDK, with
 
 # @muclient/sdk
 
-This page lists everything the extension SDK exports. The current version is **1.12.0**. A badge such as <Since v="1.1" /> marks the version a member appeared in. A member without one has been there since 1.0. The guide pages explain each area with examples. This page is the list.
+This page lists everything the extension SDK exports. The current version is **1.14.0**. A badge such as <Since v="1.1" /> marks the version a member appeared in. A member without one has been there since 1.0. The guide pages explain each area with examples. This page is the list.
 
 ```ts
 import { defineExtension } from '@muclient/sdk';
@@ -17,7 +17,7 @@ export default defineExtension({
 });
 ```
 
-At runtime the bare import `@muclient/sdk` resolves through μClient's import map. Mark it external when you bundle. For the type checker, install the types from npm under that name: `npm i -D @muclient/sdk@npm:@runmu.sh/sdk@^1.12.0` (the scaffolder does this for you). μClient tracks everything you register through `ctx.mu` and disposes it when the extension is disabled, uninstalled or reloaded.
+At runtime the bare import `@muclient/sdk` resolves through μClient's import map. Mark it external when you bundle. For the type checker, install the types from npm under that name: `npm i -D @muclient/sdk@npm:@runmu.sh/sdk@^1.14.0` (the scaffolder does this for you). μClient tracks everything you register through `ctx.mu` and disposes it when the extension is disabled, uninstalled or reloaded.
 
 A manifest's `api` is a semver range of major version 1 (`"^1.12"`, `"1.6"`). A μClient whose SDK is older than the range refuses the extension, and tells the player to update. See [`api`](/extensions/manifest#api).
 
@@ -25,7 +25,7 @@ A manifest's `api` is a semver range of major version 1 (`"^1.12"`, `"1.6"`). A 
 
 | Export | Kind | Meaning |
 |---|---|---|
-| `SDK_VERSION` | `const string` | The SDK version, `'1.12.0'` |
+| `SDK_VERSION` | `const string` | The SDK version, `'1.14.0'` |
 | `defineExtension(def)` | function | Returns `def` unchanged, typed as an `ExtensionDef` |
 | `h(tag, attrs, ...children)` <Since v="1.12" /> | function | Build DOM without HTML strings. Also `mu.ui.h` |
 | `THEME_TOKENS` <Since v="1.11" /> | `const` | The theme tokens a line style may use |
@@ -40,8 +40,12 @@ A manifest's `api` is a semver range of major version 1 (`"^1.12"`, `"1.6"`). A 
 | `InputEdit`, `InputStageSpec`, `InputPhase`, `InputSource`, `CompletionSpec`, `CompletionItem`, `MacroSpec` <Since v="1.11" /> | types | [Input](/extensions/lines-input#input-stages) |
 | `PanelSpec`, `PanelMountCtx` | interfaces | Panels |
 | `MenuSpec`, `ContextMenuSpec`, `ContextTarget`, `PaletteProviderSpec`, `PaletteItem`, `ConfirmSpec`, `PromptSpec`, `PickSpec`, `ModalSpec`, `ModalHandle`, `OverlaySpec`, `FileSaveSpec`, `HudSpec`, `ThemeSpec`, `ThemeTokens`, `ThemeInfo` <Since v="1.12" /> | types | [Surfaces](/extensions/surfaces) |
+| `ContextKindSpec`, `ContextKinds`, `KindTarget`, `TargetOf`, `JsonSchema` <Since v="1.14" /> | types | [Context kinds](/extensions/surfaces#context-kinds) |
+| `RouteSpec`, `RouteRule`, `RouteCtx` <Since v="1.14" /> | interfaces | [Line routing](/extensions/lines-input#line-routing) |
+| `ChannelMessageEvent` <Since v="1.14" /> | interface | [Own the channel settings](/extensions/protocols#own-the-channel-settings) |
+| `SettingsTile`, `ShortcutSpec` <Since v="1.14" /> | interfaces | [Commands and settings](/extensions/commands-settings#a-tile-on-the-settings-hub) |
 | `ActionSpec`, `ActionResult`, `ActionSession`, `When`, `PublicCommand` <Since v="1.12" /> | types | Actions and commands |
-| `ScenePatch`, `SceneView`, `ChannelsView`, `ChannelView`, `ChannelMessage`, `ChannelProvide`, `ChannelColor`, `FeedsView`, `MediaView`, `MediaSpec` | interfaces | The Scene, Channels, Feeds and Media |
+| `ScenePatch`, `SceneView`, `ChannelsView`, `ChannelView`, `ChannelMessage`, `ChannelProvide`, `ChannelColor`, `FeedsView` (deprecated), `FeedLineView`, `MediaView`, `MediaSpec` | interfaces | The Scene, Channels, Feeds and Media |
 | `McpArgs`, `McpMessages`, `McpMeta`, `McpSendResult`, `McpCord`, `MxpElement`, `SpanPatch`, `EditorSpec`, `EditorHandle`, `GmcpRequestOpts` <Since v="1.10" /> | types | [Protocols](/extensions/protocols) |
 | `WidgetSpec` | interface | A HUD widget |
 | `SettingSpec`, `SettingsSchema`, `SettingScopeOpts`, `CorePrefs`, `CorePrefName`, `CorePageId` | interfaces | Settings and preferences |
@@ -117,6 +121,7 @@ panels: {
   register(spec: PanelSpec): Dispose;
   open(id: string, params?: Record<string, unknown>, opts?: { title?: string; sid?: string; focus?: boolean }): void;
   close(id: string): void;
+  focus(id: string): boolean;
   update(id: string, patch: { title?: string; inViewsMenu?: boolean }): void;
   autoAdd(id: string, sid: string): void;
   vue(component: unknown): PanelSpec['mount'];
@@ -132,6 +137,7 @@ panels: {
 | `register(spec)` | Register a panel. The id must be unique, or `register` throws. Dispose unregisters it |
 | `open(id, params?, opts?)` | Open a panel, passing `params` to its `mount`. `opts` <Since v="1.7" />: the tab `title`, the session `sid` whose workspace it opens in, and `focus: false` to open it behind |
 | `close(id)` | Close a panel |
+| `focus(id)` <Since v="1.14" /> | Bring one of this extension's open panels to the front in the active session's workspace and focus its first `[data-focus-region]`, else its first focusable element. `false` when the panel is not open or is another extension's. It does not open a closed panel. See [Focus a panel](/extensions/panels#focus-a-panel) |
 | `update(id, patch)` <Since v="1.1" /> | Change a panel you registered: its tab and Views title, and whether the Views menu lists it. Throws for a panel this extension did not register |
 | `autoAdd(id, sid)` <Since v="1.1" /> | Add the panel to a session's workspace the first time its data arrives. It happens once per world on each device |
 | `vue(component)` <Since v="1.1" /> | Turn a Vue component into a `mount` function. The component gets the props `sid`, `worldId` and `params`. Import `vue` from the import map |
@@ -212,6 +218,9 @@ lines: {
   recent(sid: string, opts?: { limit?: number; before?: number }): LineView[];
   history(sid: string, opts: { before: number; limit: number }): Promise<LineView[]>;
   search(sid: string, query: string | RegExp, opts?: { limit?: number }): LineView[];
+  route(spec: RouteSpec): Dispose;
+  testRoutes(text: string, rules: RouteRule[]): { targets: string[]; move: boolean };
+  patternError(pattern: string): string;
 }
 ```
 
@@ -222,6 +231,9 @@ lines: {
 | `recent(sid, opts?)` <Since v="1.11" /> | The lines this client holds, oldest first |
 | `history(sid, opts)` <Since v="1.11" /> | Older lines from the backend's log, at most 1000 |
 | `search(sid, query, opts?)` <Since v="1.11" /> | Held lines that match, newest first |
+| `route(spec)` <Since v="1.14" /> | Register a router: `{ id, rules, deliver(target, line, ctx), edits? }`. Needs `read-output`. Throws when `rules` is not a defined `kind: 'json'` setting. See [Line routing](/extensions/lines-input#line-routing) |
+| `testRoutes(text, rules)` <Since v="1.14" /> | Run rules over one line as the host would: the targets in rule order, and whether one moves it |
+| `patternError(pattern)` <Since v="1.14" /> | Why a pattern does not compile, or `''` |
 
 ### mu.input <Since v="1.11" />
 
@@ -334,7 +346,9 @@ channels: {
   watch(fn: (channels: ChannelsView) => void, sid?: string): Dispose;
   select(key: string, sid?: string): void;
   markRead(key: string, sid?: string): void;
-  send(text: string, key?: string, sid?: string): Promise<void>;
+  send(text: string, key?: string, sid?: string, opts?: { format?: string }): Promise<void>;
+  onMessage(fn: (e: ChannelMessageEvent) => void, opts?: { ownsSettings?: boolean }): Dispose;
+  /** @deprecated */
   configure(key: string, patch: { muted?: boolean; alert?: 'all' | 'mentions' | 'none'; color?: ChannelColor | null }, sid?: string): void;
   provide(sid: string, data: ChannelProvide): Dispose;
 }
@@ -344,10 +358,12 @@ channels: {
 |---|---|
 | `push(channel, sender, text, sid?)` | Add a message to the Channels panel. Mentions and unread counts follow the channel's settings. Dispose removes the message |
 | `get`, `watch` <Since v="1.7" /> | The session's channels, messages and unread counts |
-| `select`, `markRead`, `send`, `configure` <Since v="1.7" /> | What the Channels panel does: pick a channel, mark it read, send on it, and change its mute, alerts and colour |
+| `select`, `markRead`, `send` <Since v="1.7" /> | Pick a channel, mark it read, and send on it. `send`'s `opts.format` <Since v="1.14" /> is the reply template (`{channel}`, `{text}`) |
+| `onMessage(fn, opts?)` <Since v="1.14" /> | Call `fn` with a `ChannelMessageEvent` for every message stored on a channel. With `ownsSettings: true` the extension owns mute, alert and colour per channel, the reply format and the channel alert toggle. See [Own the channel settings](/extensions/protocols#own-the-channel-settings) |
+| `configure` <Since v="1.7" /> | Deprecated since 1.14, removed in 2.0. Changed the core's mute, alerts and colour for a channel. `ChannelView.muted`, `alert` and `color` are deprecated with it |
 | `provide(sid, data)` <Since v="1.10" /> | Feed channels from your own protocol. See [Feed the Scene and Channels](/extensions/protocols#feed-the-scene-and-channels) |
 
-### mu.feeds <Since v="1.7" />
+### mu.feeds <Since v="1.7" /> (deprecated)
 
 ```ts
 feeds: {
@@ -358,7 +374,7 @@ feeds: {
 }
 ```
 
-The session's feeds (the lines a stage copied or moved there), which one the player is viewing, and clearing one.
+The session's feeds from core's legacy `rules.feeds` routing, filled only while no extension router holds `edits`. Deprecated since 1.14 and removed in 2.0: use [`mu.lines.route`](/extensions/lines-input#line-routing). The first use logs a warning.
 
 ### mu.media <Since v="1.1" />
 
@@ -409,8 +425,8 @@ settings: {
 
 | Member | Meaning |
 |---|---|
-| `define(schema)` | Register the extension's Settings page, a sub-page of **Settings → Extensions**. μClient renders it from the schema |
-| `get(key, at?)` | The resolved value of a setting, for a world id, or <Since v="1.9" /> `{ worldId }` or `{ sid }` |
+| `define(schema)` | Register the extension's Settings page, a sub-page of **Settings → Extensions**, or <Since v="1.14" /> a tile on the Settings hub with `tile`. μClient renders it from the schema |
+| `get(key, at?)` | The resolved value of a setting, for a world id, or <Since v="1.9" /> `{ worldId }` or `{ sid }`. For a shortcut row, the combos as `string[]` |
 | `set(key, value, worldId?)` | Write a value to `worldId` (default the active world) when the setting's scope allows, otherwise for all worlds. Pass `null` for all worlds |
 | `watch(key, fn, opts?)` | Call `fn` when the value changes. Since 1.9 it also calls `fn` at once, with `meta.replay: true` |
 | `open()` | Open the extension's Settings page |
@@ -424,7 +440,7 @@ prefs: {
 }
 ```
 
-The player's own settings, read-only: `a11y.reduceMotion`, `a11y.screenReader`, `a11y.speak`, `effects.calm`, `effects.glow`, `theme.id`, `audio.volume`, `audio.muted`, `text.fontSize`, `text.fontFamily`, `locale`. `watch` calls `fn` at once.
+The player's own settings, read-only: `a11y.reduceMotion`, `a11y.screenReader`, `a11y.speak`, `effects.calm`, `effects.glow`, `effects.performance` <Since v="1.14" />, `theme.id`, `audio.volume`, `audio.muted`, `audio.keySfx` and `audio.keySfxVolume` <Since v="1.14" />, `text.fontSize`, `text.fontFamily`, `locale`. `watch` calls `fn` at once.
 
 ### mu.lua
 
@@ -472,7 +488,8 @@ ui: {
 ```ts
 menus: {
   add(spec: MenuSpec): Dispose;
-  context(spec: ContextMenuSpec): Dispose;
+  kind(spec: ContextKindSpec): Dispose;
+  context<K extends ContextTargetKind>(spec: ContextMenuSpec<K>): Dispose;
   target(el: Element, target: ContextTarget): Dispose;
 }
 palette: { provide(spec: PaletteProviderSpec): Dispose; verbs(sid: string | null, verbs: string[]): Dispose }
@@ -492,7 +509,7 @@ a11y: {
 hud: { mount(spec: { id: string; slot: 'status' | 'rail' | 'top-left' | 'top-right'; order?: number; mount: PanelSpec['mount'] }): Dispose }
 ```
 
-See [Surfaces](/extensions/surfaces).
+`menus.kind` <Since v="1.14" /> registers a context kind `<extId>.<name>` that only this extension publishes targets of, as `{ kind, sid, data }`. `MenuSpec.slot` takes `'now-playing'` <Since v="1.14" />. See [Surfaces](/extensions/surfaces).
 
 ### mu.theme
 
@@ -672,7 +689,7 @@ interface PanelSpec {
 | `perSession` | `true` (default): one instance per session. `false` <Since v="1.8" />: one instance that follows the active session |
 | `defaultPosition` | Where it opens the first time (default `'right-bottom'`) |
 | `inViewsMenu` <Since v="1.1" /> | Listed in the Views menu (default `true`). Change it later with `mu.panels.update` |
-| `order` <Since v="1.4" /> | Place in the Views menu, lower first (default 200). Core panels: Terminal 0, Channels 20, Media 30, Feeds 50, Web page 210, then μClient's own at 300 and up (the GMCP inspector is 330). The Scene extension takes 10 |
+| `order` <Since v="1.4" /> | Place in the Views menu, lower first (default 200). Core panels: Terminal 0, Web page 210, then μClient's own at 300 and up (the GMCP inspector is 330). The first-party extensions take Scene 10, Channels 20, Media 30 and Feeds 50 |
 | `snapshot(el, ctx)` <Since v="1.2" /> | Hot reload: called on the old build right before its panel unmounts. Return JSON-like state such as input text or a scroll position. `undefined` keeps nothing |
 | `restore(el, state, ctx)` <Since v="1.2" /> | Hot reload: called on the new build right after `mount`, with what `snapshot` returned |
 | `show` <Since v="1.12" /> | `'always'` (default), `'auto'` (offered once `mu.panels.touch` reports data) or `'never'`. The player overrides it per world |
@@ -840,6 +857,7 @@ interface SettingSpec<T = string | number | boolean> {
   scope?: 'global' | 'world' | 'both';
   sync?: 'account' | 'device';
   when?: { key: string; equals: unknown };
+  migrateFrom?: string;
 }
 ```
 
@@ -856,15 +874,19 @@ interface SettingSpec<T = string | number | boolean> {
 | `scope` | `'both'` (default): per world, falling back to all worlds. `'world'` or `'global'` for one of the two |
 | `sync` <Since v="1.9" /> | `'account'` (default) follows the player to every device. `'device'` stays on this one |
 | `when` <Since v="1.9" /> | Show the row only while another setting equals a value |
+| `migrateFrom` <Since v="1.14" /> | A retired core pref whose values are copied in once per account. See [Take over a core setting](/extensions/commands-settings#take-over-a-core-setting) |
+
+A row may also be a `ShortcutSpec` <Since v="1.14" />: `{ key, kind: 'shortcut', command, label?, hint?, group?, when? }`. See [Shortcut rows](/extensions/commands-settings#shortcut-rows).
 
 ### SettingsSchema
 
 ```ts
 interface SettingsSchema {
   title?: string;
-  items: SettingSpec[];
+  items: Array<SettingSpec | ShortcutSpec>;
   component?: PanelSpec['mount'];
   sections?: Array<{ page: 'visual' | 'effects' | 'text' | 'audio' | 'alerts' | 'access' | 'input'; title: string; keys: string[] }>;
+  tile?: SettingsTile;
 }
 ```
 
@@ -874,6 +896,7 @@ interface SettingsSchema {
 | `items` | The rows |
 | `component` <Since v="1.9" /> | Mounted below the rows, for an editor a schema cannot express |
 | `sections` <Since v="1.9" /> | Rows of yours shown on a core Settings page too |
+| `tile` <Since v="1.14" /> | `{ glyph, order?, width? }`: show the page as its own tile on the Settings hub. Default `order` 1600 |
 
 ## CommandSpec
 
@@ -949,4 +972,4 @@ interface WasmLoaded {
 - [SDK changelog](/reference/changelog): what each version added.
 - [Build a panel in 10 minutes](/extensions/quickstart).
 - [Talking to extensions](/automation/ext-emit): the Lua side of `mu.lua.on` and `mu.lua.emit`.
-- [Upgrade to SDK 1.12](/extensions/migrating).
+- [Upgrade to SDK 1.14](/extensions/migrating).

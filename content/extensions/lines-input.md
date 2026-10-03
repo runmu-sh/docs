@@ -1,6 +1,6 @@
 ---
 title: Lines and input
-description: Change game lines in phases with LineEdit (classify, highlight, link, replace, route), read past lines, run stages on the player's commands, add Tab completions and macros, and send or capture commands.
+description: Change game lines in phases with LineEdit (classify, highlight, link, replace, route), route lines to your own targets, read past lines, run stages on the player's commands, add Tab completions and macros, and send or capture commands.
 audience: extensions
 ---
 
@@ -57,7 +57,7 @@ A stage's `run(line, ctx)` gets a `LineEdit`. Reading is always allowed: `text`,
 | `annotate(text, style?)` | A dim note after the line's text, not part of `text` |
 | `rowClass(cls)` | `hl-gold`, `hl-alert`, `hl-accent`, `mention`, or your own `ext-<id>-…` class |
 | `gag()` | Drop the line. Later stages do not see it |
-| `copyTo(feed)`, `moveTo(feed)` | Also show the line in a feed, or show it there instead of the terminal |
+| `copyTo(target)`, `moveTo(target)` | Hand the line to the edits router (see [Line routing](#line-routing)) as a copy, or instead of showing it in the terminal. With no edits router, `copyTo` does nothing and `moveTo` keeps the line in the terminal |
 | `after({ text, style?, kind? })` | Add a local line after this one |
 
 Keep RegExps static: each is compiled once.
@@ -76,6 +76,47 @@ mu.lines.stage({
   },
 });
 ```
+
+## Line routing <Since v="1.14" />
+
+A router sends matching lines to targets your extension shows, such as a feed panel. The rules are one of your own settings, so the player edits them on your page and they leave with your extension.
+
+```ts
+import type { FeedLineView } from '@muclient/sdk';
+
+mu.settings.define({
+  title: 'Feeds',
+  items: [{ key: 'routes', label: 'Routes', kind: 'json', scope: 'world', default: [] }],
+});
+
+const store = new Map<string, FeedLineView[]>();
+mu.lines.route({
+  id: 'feeds', rules: 'routes', edits: true,
+  deliver(target, line, ctx) {
+    const key = `${ctx.sid}:${target}`;
+    store.set(key, [...(store.get(key) ?? []), line]);
+  },
+});
+```
+
+`RouteSpec`:
+
+| Field | |
+|---|---|
+| `id` | Unique within your extension |
+| `rules` | The key of your `kind: 'json'` setting (scope `world` or `both`) that holds `RouteRule[]`. It is read for the session's world. A key that is not a defined json setting throws |
+| `deliver(target, line, ctx)` | Called once per matched target with a `FeedLineView` and `ctx: { sid, worldId, meta, move, rule? }`. `rule` is the rule's id, absent for a `copyTo`/`moveTo` |
+| `edits` | Also receive every extension's and trigger's `LineEdit.copyTo` and `moveTo`. One router holds this. A second is refused with a warning and routes its own rules only |
+
+A `RouteRule` is `{ id, pattern, target, move?, enabled? }`. `pattern` is plain text (a substring, any case) or `/re/flags` (flags `i m s u`, default `i`).
+
+Routing runs after the Triggers gags, on every line except echoes, backlog lines included and history lines never. When a matching `move` rule's delivery succeeds, the line is hidden from the terminal. A `deliver` that throws counts as a crash of your extension, and the line stays. Dispose, or deactivation, stops the routing. `mu.lines.route` needs the `read-output` capability.
+
+For a rule editor, `mu.lines.testRoutes(text, rules)` runs rules over one line as the host would and returns `{ targets, move }` (a "Try it" box), and `mu.lines.patternError(pattern)` returns why a pattern does not compile (an unknown flag, an invalid regex, a pattern that matches every line), or `''`.
+
+::: tip
+The first router with `edits: true` gets a one-time copy of every world's core `rules.feeds` rules into its rules setting, with `label` renamed to `target`. Do not also set `migrateFrom: 'rules.feeds'` on that setting. `mu.feeds` and `FeedsView` are deprecated; keep routed lines in your extension. See [Deprecations](/reference/deprecations).
+:::
 
 ### Backlog and history
 
@@ -165,4 +206,5 @@ Requests on one session queue, and the player's own commands are not blocked. Bo
 
 - [Surfaces](/extensions/surfaces): the dialogs a guard stage can await.
 - [Protocols](/extensions/protocols): MXP elements and spans.
+- [Commands and settings](/extensions/commands-settings): the Settings page that holds your rules.
 - [SDK reference](/reference/sdk/#mu-lines).
